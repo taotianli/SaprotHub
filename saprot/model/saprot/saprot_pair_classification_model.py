@@ -42,6 +42,26 @@ class SaprotPairClassificationModel(SaprotBaseModel):
         else:
             # If "esm" is not in the model, use "bert" as the backbone
             backbone = self.model.esm if hasattr(self.model, "esm") else self.model.bert
+            
+            # 检查输入的token IDs是否在有效范围内
+            vocab_size = backbone.embeddings.word_embeddings.num_embeddings
+            
+            # 处理inputs_1
+            input_ids_1 = inputs_1["input_ids"]
+            if torch.max(input_ids_1) >= vocab_size:
+                print(f"Warning: inputs_1 - Found token IDs exceeding vocabulary size. Max ID: {torch.max(input_ids_1).item()}, Vocab size: {vocab_size}")
+                # 将超出范围的ID替换为UNK token ID
+                unk_id = self.tokenizer.unk_token_id if self.tokenizer.unk_token_id is not None else 0
+                inputs_1["input_ids"] = torch.where(input_ids_1 < vocab_size, input_ids_1, torch.tensor(unk_id).to(input_ids_1.device))
+            
+            # 处理inputs_2
+            input_ids_2 = inputs_2["input_ids"]
+            if torch.max(input_ids_2) >= vocab_size:
+                print(f"Warning: inputs_2 - Found token IDs exceeding vocabulary size. Max ID: {torch.max(input_ids_2).item()}, Vocab size: {vocab_size}")
+                # 将超出范围的ID替换为UNK token ID
+                unk_id = self.tokenizer.unk_token_id if self.tokenizer.unk_token_id is not None else 0
+                inputs_2["input_ids"] = torch.where(input_ids_2 < vocab_size, input_ids_2, torch.tensor(unk_id).to(input_ids_2.device))
+                
             hidden_1 = backbone(**inputs_1)[0][:, 0, :]
             hidden_2 = backbone(**inputs_2)[0][:, 0, :]
 

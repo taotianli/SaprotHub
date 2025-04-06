@@ -1806,12 +1806,21 @@ def generate_embeddings(protein_list, model_type, model_arg):
 
   embedding_list = []
   name_list = []
+  save_json_path = OUTPUT_HOME / "embeddings.json"
   with torch.no_grad(), open(save_name_path, "w") as w:
     for line in tqdm(outputs):
       name, sa_seq = line.strip().split("\t")
       w.write(f">{name}\n{sa_seq}\n")
       embedding = model.get_hidden_states_from_seqs([sa_seq], reduction='mean')
       embedding_list.append(embedding[0])
+      embedding_dim = embedding[0].shape[0]
+      embedding_info = {
+        "embedding_dim": embedding_dim,
+        "embeding": embedding[0].tolist()
+      }
+      # 以utf-8编码保存为JSON文件
+      with open(save_json_path, 'w', encoding='utf-8') as f:
+          json.dump(embedding_info, f, ensure_ascii=False)
       name_list.append(name)
 
   embeddings = torch.stack(embedding_list)
@@ -4609,7 +4618,6 @@ def share_model():
     ######################################################################
     #             Modify README              #
     ######################################################################
-    import json
 
     md_path = local_dir / "README.md"
 
