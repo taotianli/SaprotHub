@@ -304,7 +304,14 @@ class SaprotBaseModel(AbstractModel):
         inputs = self.tokenizer.batch_encode_plus(seqs, return_tensors="pt", padding=True)
         inputs = {k: v.to(self.model.device) for k, v in inputs.items()}
         inputs["output_hidden_states"] = True
-        outputs = self.model.esm(**inputs)
+        # 支持ESM和BERT模型
+        if hasattr(self.model, "esm"):
+            outputs = self.model.esm(**inputs)
+        elif hasattr(self.model, "bert"):
+            outputs = self.model.bert(**inputs)
+        else:
+            raise ValueError("Model must have either 'esm' or 'bert' attribute")
+    
         
         # Get the index of the first <eos> token
         input_ids = inputs["input_ids"]
