@@ -309,6 +309,7 @@ class SaprotBaseModel(AbstractModel):
             outputs = self.model.esm(**inputs)
         elif hasattr(self.model, "bert"):
             outputs = self.model.bert(**inputs)
+            print(outputs)
         else:
             raise ValueError("Model must have either 'esm' or 'bert' attribute")
     
