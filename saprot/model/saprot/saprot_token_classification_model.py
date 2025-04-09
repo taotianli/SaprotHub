@@ -57,16 +57,17 @@ class SaprotTokenClassificationModel(SaprotBaseModel):
     
     def loss_func(self, stage, logits, labels):
         label = labels['labels']
+        
+        
+        # Flatten the logits and labels
+        logits = logits.view(-1, self.num_labels)
+        label = label.view(-1)
         # 确保logits和labels的形状匹配
         if logits.shape[0] != label.shape[0]:
             # 如果长度不匹配，取较小的长度
             min_len = min(logits.shape[0], label.shape[0])
             logits = logits[:min_len]
             label = label[:min_len]
-        
-        # Flatten the logits and labels
-        logits = logits.view(-1, self.num_labels)
-        label = label.view(-1)
         loss = cross_entropy(logits, label, ignore_index=-1)
         
         # Remove the ignored index
