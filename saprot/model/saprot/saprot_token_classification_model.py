@@ -65,14 +65,27 @@ class SaprotTokenClassificationModel(SaprotBaseModel):
                     unk_id = self.tokenizer.unk_token_id if self.tokenizer.unk_token_id is not None else 0
                     inputs["input_ids"] = torch.where(input_ids < vocab_size, input_ids, torch.tensor(unk_id).to(input_ids.device))
             
-            logits = self.model(**inputs).logits
+            outputs = self.model(**inputs)
+            logits = outputs.logits
+            
+            # 确保logits的形状与标签匹配
+            attention_mask = inputs.get("attention_mask", None)
+            if attention_mask is not None:
+                # 只保留非padding位置的logits
+                batch_size, seq_len = attention_mask.shape
+                logits = logits[attention_mask.bool()].view(-1, self.num_labels)
         
-        return logits[:]
+        return logits
     
     def loss_func(self, stage, logits, labels):
         label = labels['labels']
-        # Flatten the logits and labels
-        logits = logits.view(-1, self.num_labels)
+        attention_mask = labels.get('attention_mask', None)
+        
+        if attention_mask is not None:
+            # 只保留非padding位置的标签
+            label = label[attention_mask.bool()]
+        
+        # Flatten the labels
         label = label.view(-1)
         loss = cross_entropy(logits, label, ignore_index=-1)
         
