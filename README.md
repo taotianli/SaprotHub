@@ -14,7 +14,7 @@ Check out the video tutorial [here](https://www.youtube.com/watch?v=nmLtjlCI_7M&
 ## Discussion Groups
 ### Slack
 
-2025/03/21: We’ve just set up a slack group for discussing ColabSaprot or asking any questions, you can join [here](https://westlakeai.slack.com/archives/C08JNBN40P7)!
+2025/03/21: We've just set up a slack group for discussing ColabSaprot or asking any questions, you can join [here](https://westlakeai.slack.com/archives/C08JNBN40P7)!
 
 ### WeChat
 2024/12/01: You can scan the QR code to join our wechat groups （We currently host two active weichat groups with a total membership of nearly 500 researchers and practitioners）:
@@ -174,3 +174,52 @@ Yes, you can. But you need to agree to join OPMC, and papers that use your Colab
 - [Evolla](https://www.biorxiv.org/content/10.1101/2025.01.05.630192v1) and its [online server](http://www.chat-protein.com/)
 - [ProTrek](https://www.biorxiv.org/content/10.1101/2024.05.30.596740v2) and its [online server](http://search-protrek.com/)
 - [Pinal](https://www.biorxiv.org/content/10.1101/2024.08.01.606258v2) and its [online server](http://www.denovo-pinal.com/)
+
+# 文件夹分发工具
+
+这个Python脚本用于读取指定目录下的所有子文件夹，并将它们均匀分配到14个组中，特别适合CBCP数据标注任务。
+
+## 功能特点
+
+1. 自动识别文件夹名称中的月龄信息（格式为 `_XXmo`）
+2. 根据月龄将文件夹分为两组：0-18月和18+月
+3. 确保两个年龄组的文件夹在14个组中均匀分布
+4. 生成详细的分配报告和每组的索引文件
+5. 可选择是否复制文件夹到目标位置
+
+## 使用方法
+
+### 基本用法
+
+```bash
+python distribute_folders.py
+```
+
+默认情况下，脚本会：
+- 读取 `/public_bme/data/jiameng/CBCP/CBCP_20250403_Process_All/acpc_space/` 目录下的子文件夹
+- 创建 `distributed_folders` 目录并在其中创建14个组文件夹
+- 在每个组文件夹中创建索引文件，但不复制原始文件夹
+
+### 高级用法
+
+```bash
+python distribute_folders.py --source "源目录路径" --output "输出目录路径" --copy
+```
+
+参数说明：
+- `--source`：指定要读取的源目录路径
+- `--output`：指定要创建的输出目录路径
+- `--copy`：添加此参数将复制文件夹，而不仅创建索引
+
+### 输出文件
+
+脚本会生成以下文件：
+1. `folders_list.csv`：列出所有找到的子文件夹及其月龄
+2. `distribution_result.csv`：详细的分配结果，包括每组文件夹数量和文件夹列表
+3. 在每个组文件夹中创建 `索引.txt`：列出该组分配的所有文件夹及其原始路径
+
+## 注意事项
+
+1. 确保有足够的磁盘空间用于存储输出文件，特别是使用 `--copy` 选项时
+2. 如果源目录中的子文件夹数量较多，处理可能需要一些时间
+3. 文件夹名称必须以 `_数字mo` 格式包含月龄信息才能正确分类
