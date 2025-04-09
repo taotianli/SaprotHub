@@ -47,52 +47,29 @@ class SaprotTokenClassificationModel(SaprotBaseModel):
             logits = self.model.classifier.out_proj(x)
         
         else:
-            # 检查输入的token IDs是否在有效范围内
-            if hasattr(self.model, "esm"):
-                vocab_size = self.model.esm.embeddings.word_embeddings.num_embeddings
-                input_ids = inputs["input_ids"]
-                if torch.max(input_ids) >= vocab_size:
-                    print(f"Warning: Found token IDs exceeding vocabulary size. Max ID: {torch.max(input_ids).item()}, Vocab size: {vocab_size}")
-                    # 将超出范围的ID替换为UNK token ID
-                    unk_id = self.tokenizer.unk_token_id if self.tokenizer.unk_token_id is not None else 0
-                    inputs["input_ids"] = torch.where(input_ids < vocab_size, input_ids, torch.tensor(unk_id).to(input_ids.device))
-            elif hasattr(self.model, "bert"):
-                vocab_size = self.model.bert.embeddings.word_embeddings.num_embeddings
-                input_ids = inputs["input_ids"]
-                if torch.max(input_ids) >= vocab_size:
-                    print(f"Warning: Found token IDs exceeding vocabulary size. Max ID: {torch.max(input_ids).item()}, Vocab size: {vocab_size}")
-                    # 将超出范围的ID替换为UNK token ID
-                    unk_id = self.tokenizer.unk_token_id if self.tokenizer.unk_token_id is not None else 0
-                    inputs["input_ids"] = torch.where(input_ids < vocab_size, input_ids, torch.tensor(unk_id).to(input_ids.device))
-            
-            outputs = self.model(**inputs)
-            logits = outputs.logits
+            logits = self.model(**inputs).logits
         
-        return logits
+        return logits[:]
     
     def loss_func(self, stage, logits, labels):
         label = labels['labels']
-        
-        # 将logits和label展平为2D和1D
-        batch_size, seq_len, num_labels = logits.shape
-        logits = logits.view(-1, num_labels)  # [batch_size * seq_len, num_labels]
-        label = label.view(-1)  # [batch_size * seq_len]
-        
-        # 计算损失
+        # Flatten the logits and labels
+        logits = logits.view(-1, self.num_labels)
+        label = label.view(-1)
         loss = cross_entropy(logits, label, ignore_index=-1)
         
-        # 移除被忽略的索引位置
+        # Remove the ignored index
         mask = label != -1
         label = label[mask]
         logits = logits[mask]
         
-        # 非训练阶段时保存预测结果
+        # Add the outputs to the list if not in training mode
         if stage != "train":
             preds = logits.argmax(dim=-1)
             self.preds.append(preds)
             self.targets.append(label)
         
-        # 更新指标
+        # Update metrics
         for metric in self.metrics[stage].values():
             metric.update(logits.detach(), label)
         
@@ -101,7 +78,7 @@ class SaprotTokenClassificationModel(SaprotBaseModel):
             log_dict["train_loss"] = loss
             self.log_info(log_dict)
 
-            # 重置训练指标
+            # Reset train metrics
             self.reset_metrics("train")
         
         return loss
