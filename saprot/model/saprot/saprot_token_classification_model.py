@@ -67,40 +67,32 @@ class SaprotTokenClassificationModel(SaprotBaseModel):
             
             outputs = self.model(**inputs)
             logits = outputs.logits
-            
-            # 确保logits的形状与标签匹配
-            attention_mask = inputs.get("attention_mask", None)
-            if attention_mask is not None:
-                # 只保留非padding位置的logits
-                batch_size, seq_len = attention_mask.shape
-                logits = logits[attention_mask.bool()].view(-1, self.num_labels)
         
         return logits
     
     def loss_func(self, stage, logits, labels):
         label = labels['labels']
-        attention_mask = labels.get('attention_mask', None)
         
-        if attention_mask is not None:
-            # 只保留非padding位置的标签
-            label = label[attention_mask.bool()]
+        # 将logits和label展平为2D和1D
+        batch_size, seq_len, num_labels = logits.shape
+        logits = logits.view(-1, num_labels)  # [batch_size * seq_len, num_labels]
+        label = label.view(-1)  # [batch_size * seq_len]
         
-        # Flatten the labels
-        label = label.view(-1)
+        # 计算损失
         loss = cross_entropy(logits, label, ignore_index=-1)
         
-        # Remove the ignored index
+        # 移除被忽略的索引位置
         mask = label != -1
         label = label[mask]
         logits = logits[mask]
         
-        # Add the outputs to the list if not in training mode
+        # 非训练阶段时保存预测结果
         if stage != "train":
             preds = logits.argmax(dim=-1)
             self.preds.append(preds)
             self.targets.append(label)
         
-        # Update metrics
+        # 更新指标
         for metric in self.metrics[stage].values():
             metric.update(logits.detach(), label)
         
@@ -109,7 +101,7 @@ class SaprotTokenClassificationModel(SaprotBaseModel):
             log_dict["train_loss"] = loss
             self.log_info(log_dict)
 
-            # Reset train metrics
+            # 重置训练指标
             self.reset_metrics("train")
         
         return loss
