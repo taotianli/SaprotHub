@@ -268,18 +268,7 @@ class SaprotBaseModel(AbstractModel):
                             the hidden dimension.
         """
         inputs["output_hidden_states"] = True
-        if hasattr(self.model, "esm"):
-            outputs = self.model.esm(**inputs)
-        elif hasattr(self.model, "bert"):
-            # vocab_size = self.model.bert.embeddings.word_embeddings.num_embeddings
-            # input_ids = inputs["input_ids"]
-            # if torch.max(input_ids) >= vocab_size:
-            #     # print(f"Warning: get_hidden_states_from_dict - Found token IDs exceeding vocabulary size. Max ID: {torch.max(input_ids).item()}, Vocab size: {vocab_size}")
-            #     # 将超出范围的ID替换为UNK token ID
-            #     unk_id = self.tokenizer.unk_token_id if self.tokenizer.unk_token_id is not None else 0
-            #     inputs["input_ids"] = torch.where(input_ids < vocab_size, input_ids, torch.tensor(unk_id).to(input_ids.device))
-            outputs = self.model.bert(**inputs)
-
+        outputs = self.model.esm(**inputs)
         
         # Get the index of the first <eos> token
         input_ids = inputs["input_ids"]
@@ -298,6 +287,7 @@ class SaprotBaseModel(AbstractModel):
             repr_list.append(repr)
         
         return repr_list
+
     
     def get_hidden_states_from_seqs(self, seqs: list, reduction: str = None) -> list:
         """
