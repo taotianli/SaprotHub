@@ -287,6 +287,7 @@ class SaprotBaseModel(AbstractModel):
             repr_list.append(repr)
         
         return repr_list
+
     
     def get_hidden_states_from_seqs(self, seqs: list, reduction: str = None) -> list:
         """
@@ -304,7 +305,22 @@ class SaprotBaseModel(AbstractModel):
         inputs = self.tokenizer.batch_encode_plus(seqs, return_tensors="pt", padding=True)
         inputs = {k: v.to(self.model.device) for k, v in inputs.items()}
         inputs["output_hidden_states"] = True
-        outputs = self.model.esm(**inputs)
+        # 支持ESM和BERT模型
+        if hasattr(self.model, "esm"):
+            outputs = self.model.esm(**inputs)
+        elif hasattr(self.model, "bert"):
+            # # 检查token_ids是否在有效范围内
+            # vocab_size = self.model.bert.embeddings.word_embeddings.num_embeddings
+            # input_ids = inputs["input_ids"]
+            # if torch.max(input_ids) >= vocab_size:
+            #     print(f"Warning: Found token IDs exceeding vocabulary size. Max ID: {torch.max(input_ids).item()}, Vocab size: {vocab_size}")
+            #     # 将超出范围的ID替换为UNK token ID
+            #     unk_id = self.tokenizer.unk_token_id if self.tokenizer.unk_token_id is not None else 0
+            #     inputs["input_ids"] = torch.where(input_ids < vocab_size, input_ids, torch.tensor(unk_id).to(input_ids.device))
+            outputs = self.model.bert(**inputs)
+        else:
+            raise ValueError("Model must have either 'esm' or 'bert' attribute")
+    
         
         # Get the index of the first <eos> token
         input_ids = inputs["input_ids"]
@@ -448,5 +464,5 @@ class SaprotBaseModel(AbstractModel):
                 )
             )
             display(hint)
-            plt.tight_layout()
+            # plt.tight_layout()
             plt.show()

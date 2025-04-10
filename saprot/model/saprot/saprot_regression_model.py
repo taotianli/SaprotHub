@@ -41,10 +41,26 @@ class SaprotRegressionModel(SaprotBaseModel):
                 logits = self.model.classifier.out_proj(x).squeeze(dim=-1)
 
             else:
+                # 检查输入的token IDs是否在有效范围内
+                vocab_size = self.model.esm.embeddings.word_embeddings.num_embeddings
+                input_ids = inputs["input_ids"]
+                if torch.max(input_ids) >= vocab_size:
+                    print(f"Warning: Found token IDs exceeding vocabulary size. Max ID: {torch.max(input_ids).item()}, Vocab size: {vocab_size}")
+                    # 将超出范围的ID替换为UNK token ID
+                    unk_id = self.tokenizer.unk_token_id if self.tokenizer.unk_token_id is not None else 0
+                    inputs["input_ids"] = torch.where(input_ids < vocab_size, input_ids, torch.tensor(unk_id).to(input_ids.device))
                 logits = self.model(**inputs).logits.squeeze(dim=-1)
 
         # For ProtBERT
         elif hasattr(self.model, "bert"):
+            # 检查输入的token IDs是否在有效范围内
+            vocab_size = self.model.bert.embeddings.word_embeddings.num_embeddings
+            input_ids = inputs["input_ids"]
+            if torch.max(input_ids) >= vocab_size:
+                print(f"Warning: Found token IDs exceeding vocabulary size. Max ID: {torch.max(input_ids).item()}, Vocab size: {vocab_size}")
+                # 将超出范围的ID替换为UNK token ID
+                unk_id = self.tokenizer.unk_token_id if self.tokenizer.unk_token_id is not None else 0
+                inputs["input_ids"] = torch.where(input_ids < vocab_size, input_ids, torch.tensor(unk_id).to(input_ids.device))
             repr = self.model.bert(**inputs).last_hidden_state[:, 0]
             logits = self.model.classifier(repr).squeeze(dim=-1)
 
