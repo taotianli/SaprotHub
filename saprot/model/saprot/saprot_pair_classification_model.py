@@ -49,7 +49,6 @@ class SaprotPairClassificationModel(SaprotBaseModel):
             # 处理inputs_1
             input_ids_1 = inputs_1["input_ids"]
             if torch.max(input_ids_1) >= vocab_size:
-                print(f"Warning: inputs_1 - Found token IDs exceeding vocabulary size. Max ID: {torch.max(input_ids_1).item()}, Vocab size: {vocab_size}")
                 # 将超出范围的ID替换为UNK token ID
                 unk_id = self.tokenizer.unk_token_id if self.tokenizer.unk_token_id is not None else 0
                 inputs_1["input_ids"] = torch.where(input_ids_1 < vocab_size, input_ids_1, torch.tensor(unk_id).to(input_ids_1.device))
@@ -57,7 +56,6 @@ class SaprotPairClassificationModel(SaprotBaseModel):
             # 处理inputs_2
             input_ids_2 = inputs_2["input_ids"]
             if torch.max(input_ids_2) >= vocab_size:
-                print(f"Warning: inputs_2 - Found token IDs exceeding vocabulary size. Max ID: {torch.max(input_ids_2).item()}, Vocab size: {vocab_size}")
                 # 将超出范围的ID替换为UNK token ID
                 unk_id = self.tokenizer.unk_token_id if self.tokenizer.unk_token_id is not None else 0
                 inputs_2["input_ids"] = torch.where(input_ids_2 < vocab_size, input_ids_2, torch.tensor(unk_id).to(input_ids_2.device))

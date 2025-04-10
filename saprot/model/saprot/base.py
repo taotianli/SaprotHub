@@ -267,17 +267,19 @@ class SaprotBaseModel(AbstractModel):
             hidden_states: A list of tensors. Each tensor is of shape [L, D], where L is the sequence length and D is
                             the hidden dimension.
         """
-        if hasattr(self.model, "bert"):
+        inputs["output_hidden_states"] = True
+        if hasattr(self.model, "esm"):
+            outputs = self.model.esm(**inputs)
+        elif hasattr(self.model, "bert"):
             vocab_size = self.model.bert.embeddings.word_embeddings.num_embeddings
             input_ids = inputs["input_ids"]
             if torch.max(input_ids) >= vocab_size:
-                print(f"Warning: get_hidden_states_from_dict - Found token IDs exceeding vocabulary size. Max ID: {torch.max(input_ids).item()}, Vocab size: {vocab_size}")
+                # print(f"Warning: get_hidden_states_from_dict - Found token IDs exceeding vocabulary size. Max ID: {torch.max(input_ids).item()}, Vocab size: {vocab_size}")
                 # 将超出范围的ID替换为UNK token ID
                 unk_id = self.tokenizer.unk_token_id if self.tokenizer.unk_token_id is not None else 0
                 inputs["input_ids"] = torch.where(input_ids < vocab_size, input_ids, torch.tensor(unk_id).to(input_ids.device))
-        
-        inputs["output_hidden_states"] = True
-        outputs = self.model.esm(**inputs)
+            outputs = self.model.bert(**inputs)
+
         
         # Get the index of the first <eos> token
         input_ids = inputs["input_ids"]
@@ -315,14 +317,6 @@ class SaprotBaseModel(AbstractModel):
         inputs["output_hidden_states"] = True
         # 支持ESM和BERT模型
         if hasattr(self.model, "esm"):
-            # 检查token_ids是否在有效范围内
-            vocab_size = self.model.esm.embeddings.word_embeddings.num_embeddings
-            input_ids = inputs["input_ids"]
-            if torch.max(input_ids) >= vocab_size:
-                print(f"Warning: Found token IDs exceeding vocabulary size. Max ID: {torch.max(input_ids).item()}, Vocab size: {vocab_size}")
-                # 将超出范围的ID替换为UNK token ID
-                unk_id = self.tokenizer.unk_token_id if self.tokenizer.unk_token_id is not None else 0
-                inputs["input_ids"] = torch.where(input_ids < vocab_size, input_ids, torch.tensor(unk_id).to(input_ids.device))
             outputs = self.model.esm(**inputs)
         elif hasattr(self.model, "bert"):
             # 检查token_ids是否在有效范围内
