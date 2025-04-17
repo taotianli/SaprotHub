@@ -41,6 +41,9 @@ class SaprotClassificationDataset(LMDBDataset):
     def __getitem__(self, index):
         entry = json.loads(self._get(index))
         seq = entry['seq']
+        
+        # 打印原始序列
+        print("Original sequence:", seq)
 
         # Mask structure tokens
         if self.mask_struc_ratio is not None:
@@ -58,6 +61,8 @@ class SaprotClassificationDataset(LMDBDataset):
                 tokens[idx] = tokens[idx][:-1] + "#"
             
             seq = "".join(tokens)
+            # 打印掩码后的序列
+            print("After masking structure tokens:", seq)
 
         # Mask structure tokens with pLDDT < threshold
         if self.plddt_threshold is not None:
@@ -69,9 +74,16 @@ class SaprotClassificationDataset(LMDBDataset):
                     seq += token[:-1] + "#"
                 else:
                     seq += token
+            # 打印pLDDT掩码后的序列
+            print("After masking with pLDDT threshold:", seq)
 
         tokens = self.tokenizer.tokenize(seq)[:self.max_length]
+        # 打印tokenize后的序列
+        print("Tokenized sequence:", tokens)
+        
         seq = " ".join(tokens)
+        # 打印最终的处理后序列
+        print("Final processed sequence:", seq)
         
         if self.use_bias_feature:
             coords = {k: v[:self.max_length] for k, v in entry['coords'].items()}
@@ -88,10 +100,20 @@ class SaprotClassificationDataset(LMDBDataset):
     def collate_fn(self, batch):
         seqs, label_ids, coords = tuple(zip(*batch))
 
+        # 打印进入collate_fn的序列
+        print("Sequences before batch_encode_plus:", seqs)
+        
         label_ids = torch.tensor(label_ids, dtype=torch.long)
         labels = {"labels": label_ids}
     
         encoder_info = self.tokenizer.batch_encode_plus(seqs, return_tensors='pt', padding=True)
+        
+        # 打印batch_encode_plus的结果
+        print("Encoder info after batch_encode_plus:")
+        print("Input IDs:", encoder_info["input_ids"])
+        print("Token type IDs:", encoder_info.get("token_type_ids", "Not available"))
+        print("Attention mask:", encoder_info.get("attention_mask", "Not available"))
+        
         inputs = {"inputs": encoder_info}
         if self.use_bias_feature:
             inputs["coords"] = coords

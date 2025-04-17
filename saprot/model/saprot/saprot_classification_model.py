@@ -25,11 +25,15 @@ class SaprotClassificationModel(SaprotBaseModel):
         if coords is not None:
             inputs = self.add_bias_feature(inputs, coords)
 
+        # 打印原始输入内容
+        print("Raw inputs:", inputs)
+        
+        # 如果inputs包含encoder_info，这是原始序列转换为ID的结果
+        if "inputs" in inputs and isinstance(inputs["inputs"], dict):
+            print("Original sequence input before conversion:", inputs["inputs"])
+        
         # If backbone is frozen, the embedding will be the average of all residues
-        # print('freeze_backbone:',self.freeze_backbone)
         if self.freeze_backbone:
-            # print(inputs)
-            print(self.freeze_backbone)
             repr = torch.stack(self.get_hidden_states_from_dict(inputs, reduction="mean"))
             x = self.model.classifier.dropout(repr)
             x = self.model.classifier.dense(x)
@@ -42,17 +46,18 @@ class SaprotClassificationModel(SaprotBaseModel):
             vocab_size = self.model.esm.embeddings.word_embeddings.num_embeddings
             print(f"esm vocab_size: {vocab_size}")
             print('here esm',inputs)
+            
+            # 如果inputs中包含input_ids，打印它们
+            if "input_ids" in inputs:
+                print("Input IDs:", inputs["input_ids"])
+            elif "inputs" in inputs and "input_ids" in inputs["inputs"]:
+                print("Input IDs from inputs dict:", inputs["inputs"]["input_ids"])
+                
             logits = self.model(**inputs).logits
 
         elif hasattr(self.model, "bert"):
             vocab_size = self.model.bert.embeddings.word_embeddings.num_embeddings
             print(f"vocab_size: {vocab_size}")
-            # input_ids = inputs["input_ids"]
-            # print(f"input_ids: {input_ids}")
-            # print(f"inputs类型: {type(inputs)}")
-            # print(f"inputs字典键: {inputs.keys()}")
-            # print(f"input_ids形状: {inputs['input_ids'].shape}")
-            # print(f"input_ids内容: {inputs['input_ids']}")
             # if torch.max(input_ids) >= vocab_size:
             #     unk_id = self.tokenizer.unk_token_id if self.tokenizer.unk_token_id is not None else 0
             #     inputs["input_ids"] = torch.where(input_ids < vocab_size, input_ids, torch.tensor(unk_id).to(input_ids.device))
