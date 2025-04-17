@@ -336,8 +336,13 @@ class SaprotBaseModel(AbstractModel):
             outputs = self.model.bert(**inputs)
             repr_list = []
             hidden_states = outputs["hidden_states"][-1]
-            repr = hidden_states[i][1:].mean(dim=0)
-            repr_list.append(repr)
+            for i in range(hidden_states.shape[0]):
+                if reduction == "mean":
+                    repr = hidden_states[i][1:].mean(dim=0)
+                else:
+                    repr = hidden_states[i][1:]
+                
+                repr_list.append(repr)
 
         else:
             raise ValueError("Model must have either 'esm' or 'bert' attribute")
