@@ -316,28 +316,31 @@ class SaprotBaseModel(AbstractModel):
 
         if hasattr(self.model, "esm"):
             outputs = self.model.esm(**inputs)
+            # Get the index of the first <eos> token
+            input_ids = inputs["input_ids"]
+            eos_id = self.tokenizer.eos_token_id
+            print(input_ids, eos_id)
+            ends = (input_ids == eos_id).int()
+            indices = ends.argmax(dim=-1)
+            
+            repr_list = []
+            hidden_states = outputs["hidden_states"][-1]
+            for i, idx in enumerate(indices):
+                if reduction == "mean":
+                    repr = hidden_states[i][1:idx].mean(dim=0)
+                else:
+                    repr = hidden_states[i][1:idx]
+                
+                repr_list.append(repr)
         elif hasattr(self.model, "bert"):
             outputs = self.model.bert(**inputs)
+            repr_list = []
+            hidden_states = outputs["hidden_states"][-1]
+            repr = hidden_states[i][1:].mean(dim=0)
+            repr_list.append(repr)
+
         else:
             raise ValueError("Model must have either 'esm' or 'bert' attribute")
-    
-        
-        # Get the index of the first <eos> token
-        input_ids = inputs["input_ids"]
-        eos_id = self.tokenizer.eos_token_id
-        print(input_ids, eos_id)
-        ends = (input_ids == eos_id).int()
-        indices = ends.argmax(dim=-1)
-        
-        repr_list = []
-        hidden_states = outputs["hidden_states"][-1]
-        for i, idx in enumerate(indices):
-            if reduction == "mean":
-                repr = hidden_states[i][1:idx].mean(dim=0)
-            else:
-                repr = hidden_states[i][1:idx]
-            
-            repr_list.append(repr)
         
         return repr_list
     
