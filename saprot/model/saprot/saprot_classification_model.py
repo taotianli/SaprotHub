@@ -26,9 +26,10 @@ class SaprotClassificationModel(SaprotBaseModel):
             inputs = self.add_bias_feature(inputs, coords)
 
         # If backbone is frozen, the embedding will be the average of all residues
-        print('freeze_backbone:',self.freeze_backbone)
+        # print('freeze_backbone:',self.freeze_backbone)
         if self.freeze_backbone:
-            print(inputs)
+            # print(inputs)
+            print(self.freeze_backbone)
             repr = torch.stack(self.get_hidden_states_from_dict(inputs, reduction="mean"))
             x = self.model.classifier.dropout(repr)
             x = self.model.classifier.dense(x)
@@ -38,6 +39,7 @@ class SaprotClassificationModel(SaprotBaseModel):
 
         # For ESM models
         elif hasattr(self.model, "esm"):
+            print('here esm',inputs)
             logits = self.model(**inputs).logits
 
         elif hasattr(self.model, "bert"):
