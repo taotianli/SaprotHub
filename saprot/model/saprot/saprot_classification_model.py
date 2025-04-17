@@ -39,16 +39,16 @@ class SaprotClassificationModel(SaprotBaseModel):
             logits = self.model(**inputs).logits
 
         elif hasattr(self.model, "bert"):
-            vocab_size = self.model.bert.embeddings.word_embeddings.num_embeddings
-            input_ids = inputs["input_ids"]
-            print(f"input_ids: {input_ids}")
-            print(f"inputs类型: {type(inputs)}")
-            print(f"inputs字典键: {inputs.keys()}")
-            print(f"input_ids形状: {inputs['input_ids'].shape}")
-            print(f"input_ids内容: {inputs['input_ids']}")
-            if torch.max(input_ids) >= vocab_size:
-                unk_id = self.tokenizer.unk_token_id if self.tokenizer.unk_token_id is not None else 0
-                inputs["input_ids"] = torch.where(input_ids < vocab_size, input_ids, torch.tensor(unk_id).to(input_ids.device))
+            # vocab_size = self.model.bert.embeddings.word_embeddings.num_embeddings
+            # input_ids = inputs["input_ids"]
+            # print(f"input_ids: {input_ids}")
+            # print(f"inputs类型: {type(inputs)}")
+            # print(f"inputs字典键: {inputs.keys()}")
+            # print(f"input_ids形状: {inputs['input_ids'].shape}")
+            # print(f"input_ids内容: {inputs['input_ids']}")
+            # if torch.max(input_ids) >= vocab_size:
+            #     unk_id = self.tokenizer.unk_token_id if self.tokenizer.unk_token_id is not None else 0
+            #     inputs["input_ids"] = torch.where(input_ids < vocab_size, input_ids, torch.tensor(unk_id).to(input_ids.device))
                     
             logits = self.model(**inputs).logits
         
