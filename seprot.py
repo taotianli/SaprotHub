@@ -66,7 +66,7 @@ try:
   from pathlib import Path
   from tqdm import tqdm
   from datetime import datetime
-  from transformers import AutoTokenizer, EsmForProteinFolding, EsmTokenizer
+  from transformers import AutoTokenizer, EsmForProteinFolding, EsmTokenizer, BertTokenizer
   from transformers.models.esm.openfold_utils.protein import to_pdb, Protein as OFProtein
   from transformers.models.esm.openfold_utils.feats import atom14_to_atom37
   from string import ascii_uppercase,ascii_lowercase
@@ -191,7 +191,7 @@ from google.colab import files
 from pathlib import Path
 from tqdm import tqdm
 from datetime import datetime
-from transformers import AutoTokenizer, EsmForProteinFolding, EsmTokenizer
+from transformers import AutoTokenizer, EsmForProteinFolding, EsmTokenizer, BertTokenizer
 from transformers.models.esm.openfold_utils.protein import to_pdb, Protein as OFProtein
 from transformers.models.esm.openfold_utils.feats import atom14_to_atom37
 from string import ascii_uppercase,ascii_lowercase
@@ -1585,8 +1585,8 @@ def make_predictions(df, rows, num_labels, model_type, model_arg):
 
   # Load model
   model = my_load_model(config.model)
-  tokenizer = EsmTokenizer.from_pretrained(config.model.kwargs.config_path)
-  device = "cuda" if torch.cuda.is_available() else "cpu"
+  tokenizer = AutoTokenizer.from_pretrained(config.model.kwargs.config_path)
+  device =  "cpu"
   model.to(device)
 
   # Start prediction
@@ -1767,7 +1767,7 @@ def load_embedding_generation_model(model_type, model_arg):
   config.model.kwargs.lora_kwargs = lora_kwargs
 
   model = my_load_model(config.model)
-  tokenizer = EsmTokenizer.from_pretrained(config.model.kwargs.config_path)
+  tokenizer = AutoTokenizer.from_pretrained(config.model.kwargs.config_path)
   device = "cuda" if torch.cuda.is_available() else "cpu"
   model.to(device)
 
