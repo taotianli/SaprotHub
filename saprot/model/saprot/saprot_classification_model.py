@@ -41,6 +41,7 @@ class SaprotClassificationModel(SaprotBaseModel):
         elif hasattr(self.model, "bert"):
             vocab_size = self.model.bert.embeddings.word_embeddings.num_embeddings
             input_ids = inputs["input_ids"]
+            print(input)
             print(f"input_ids: {input_ids}")
             if torch.max(input_ids) >= vocab_size:
                 unk_id = self.tokenizer.unk_token_id if self.tokenizer.unk_token_id is not None else 0
