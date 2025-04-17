@@ -26,7 +26,9 @@ class SaprotClassificationModel(SaprotBaseModel):
             inputs = self.add_bias_feature(inputs, coords)
 
         # If backbone is frozen, the embedding will be the average of all residues
+        print('freeze_backbone:',self.freeze_backbone)
         if self.freeze_backbone:
+            print(inputs)
             repr = torch.stack(self.get_hidden_states_from_dict(inputs, reduction="mean"))
             x = self.model.classifier.dropout(repr)
             x = self.model.classifier.dense(x)
@@ -39,7 +41,8 @@ class SaprotClassificationModel(SaprotBaseModel):
             logits = self.model(**inputs).logits
 
         elif hasattr(self.model, "bert"):
-            # vocab_size = self.model.bert.embeddings.word_embeddings.num_embeddings
+            vocab_size = self.model.bert.embeddings.word_embeddings.num_embeddings
+            print(f"vocab_size: {vocab_size}")
             # input_ids = inputs["input_ids"]
             # print(f"input_ids: {input_ids}")
             # print(f"inputs类型: {type(inputs)}")
