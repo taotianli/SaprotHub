@@ -24,13 +24,6 @@ class SaprotClassificationModel(SaprotBaseModel):
     def forward(self, inputs, coords=None):
         if coords is not None:
             inputs = self.add_bias_feature(inputs, coords)
-
-        # 打印原始输入内容
-        print("Raw inputs:", inputs)
-        
-        # 如果inputs包含encoder_info，这是原始序列转换为ID的结果
-        if "inputs" in inputs and isinstance(inputs["inputs"], dict):
-            print("Original sequence input before conversion:", inputs["inputs"])
         
         # If backbone is frozen, the embedding will be the average of all residues
         if self.freeze_backbone:
