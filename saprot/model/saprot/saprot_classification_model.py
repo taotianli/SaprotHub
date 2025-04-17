@@ -39,6 +39,8 @@ class SaprotClassificationModel(SaprotBaseModel):
 
         # For ESM models
         elif hasattr(self.model, "esm"):
+            vocab_size = self.model.esm.embeddings.word_embeddings.num_embeddings
+            print(f"esm vocab_size: {vocab_size}")
             print('here esm',inputs)
             logits = self.model(**inputs).logits
 
