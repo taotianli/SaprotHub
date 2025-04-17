@@ -2,7 +2,7 @@ import torch
 import json
 
 from ..lmdb_dataset import LMDBDataset
-from transformers import EsmConfig, EsmTokenizer
+from transformers import EsmConfig, EsmTokenizer, AutoTokenizer
 from ..data_interface import register_dataset
 
 
@@ -24,7 +24,7 @@ class SaprotPPIDataset(LMDBDataset):
             **kwargs:
         """
         super().__init__(**kwargs)
-        self.tokenizer = EsmTokenizer.from_pretrained(tokenizer)
+        self.tokenizer = AutoTokenizer.from_pretrained(tokenizer)
         self.max_length = max_length
         self.plddt_threshold = plddt_threshold
 

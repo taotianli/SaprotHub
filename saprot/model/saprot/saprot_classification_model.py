@@ -42,26 +42,10 @@ class SaprotClassificationModel(SaprotBaseModel):
             logits = self.model.classifier.out_proj(x)
 
         # For ESM models
-        elif hasattr(self.model, "esm"):
-            vocab_size = self.model.esm.embeddings.word_embeddings.num_embeddings
-            print(f"esm vocab_size: {vocab_size}")
-            print('here esm',inputs)
-            
-            # 如果inputs中包含input_ids，打印它们
-            if "input_ids" in inputs:
-                print("Input IDs:", inputs["input_ids"])
-            elif "inputs" in inputs and "input_ids" in inputs["inputs"]:
-                print("Input IDs from inputs dict:", inputs["inputs"]["input_ids"])
-                
+        elif hasattr(self.model, "esm"):    
             logits = self.model(**inputs).logits
 
         elif hasattr(self.model, "bert"):
-            vocab_size = self.model.bert.embeddings.word_embeddings.num_embeddings
-            print(f"vocab_size: {vocab_size}")
-            # if torch.max(input_ids) >= vocab_size:
-            #     unk_id = self.tokenizer.unk_token_id if self.tokenizer.unk_token_id is not None else 0
-            #     inputs["input_ids"] = torch.where(input_ids < vocab_size, input_ids, torch.tensor(unk_id).to(input_ids.device))
-                    
             logits = self.model(**inputs).logits
         
         return logits

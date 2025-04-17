@@ -6,7 +6,7 @@ import os
 
 
 from torch.utils.data import Subset
-from transformers import EsmTokenizer
+from transformers import EsmTokenizer, AutoTokenizer
 from ..data_interface import register_dataset
 from ..lmdb_dataset import *
 from data.data_transform import *
@@ -34,7 +34,7 @@ class SaprotLMDataset(LMDBDataset):
 			**kwargs: other arguments for LMDBDataset
 		"""
 		super().__init__(**kwargs)
-		self.tokenizer = EsmTokenizer.from_pretrained(tokenizer)
+		self.tokenizer = AutoTokenizer.from_pretrained(tokenizer)
 		self.aa = [k for k in self.tokenizer.get_vocab().keys()]
 
 		self.max_length = max_length

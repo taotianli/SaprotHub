@@ -11,6 +11,8 @@ from transformers import (
     AutoModelForTokenClassification,
     EsmForMaskedLM,
     EsmForSequenceClassification,
+    EsmTokenizer,
+    BertTokenizer,
 )
 from easydict import EasyDict
 from ..abstract_model import AbstractModel

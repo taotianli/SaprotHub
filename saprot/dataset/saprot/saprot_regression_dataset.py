@@ -3,7 +3,7 @@ import json
 import random
 
 from ..data_interface import register_dataset
-from transformers import EsmTokenizer
+from transformers import EsmTokenizer, AutoTokenizer
 from ..lmdb_dataset import *
 from ..lmdb_dataset import *
 from utils.others import setup_seed
@@ -40,7 +40,7 @@ class SaprotRegressionDataset(LMDBDataset):
 		"""
 		
 		super().__init__(**kwargs)
-		self.tokenizer = EsmTokenizer.from_pretrained(tokenizer)
+		self.tokenizer = AutoTokenizer.from_pretrained(tokenizer)
 		self.max_length = max_length
 		self.min_clip = min_clip
 		self.mix_max_norm = mix_max_norm
