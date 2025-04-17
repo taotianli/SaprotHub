@@ -3,7 +3,7 @@ import json
 import random
 
 from ..data_interface import register_dataset
-from transformers import EsmTokenizer
+from transformers import EsmTokenizer, BertTokenizer, AutoTokenizer
 from ..lmdb_dataset import *
 
 
@@ -30,7 +30,7 @@ class SaprotClassificationDataset(LMDBDataset):
             **kwargs:
         """
         super().__init__(**kwargs)
-        self.tokenizer = EsmTokenizer.from_pretrained(tokenizer)
+        self.tokenizer = AutoTokenizer.from_pretrained(tokenizer)
         self.max_length = max_length
         self.use_bias_feature = use_bias_feature
         self.preset_label = preset_label
