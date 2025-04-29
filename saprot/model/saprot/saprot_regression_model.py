@@ -66,7 +66,10 @@ class SaprotRegressionModel(SaprotBaseModel):
     def loss_func(self, stage, outputs, labels):
         fitness = labels['labels'].to(outputs)
         loss = torch.nn.functional.mse_loss(outputs, fitness)
-
+        
+        print("Outputs:", outputs)
+        print("Labels:", fitness)
+        
         # Update metrics
         for metric in self.metrics[stage].values():
             # Training is on half precision, but metrics expect float to compute correctly.
