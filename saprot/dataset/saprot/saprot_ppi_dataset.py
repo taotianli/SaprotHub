@@ -2,7 +2,7 @@ import torch
 import json
 
 from ..lmdb_dataset import LMDBDataset
-from transformers import EsmConfig, EsmTokenizer, AutoTokenizer
+from transformers import AutoTokenizer
 from ..data_interface import register_dataset
 
 

@@ -3,7 +3,7 @@ import json
 import random
 
 from ..data_interface import register_dataset
-from transformers import EsmTokenizer
+from transformers import AutoTokenizer
 from ..lmdb_dataset import *
 from data.data_transform import *
 from scipy.spatial.distance import pdist, squareform
@@ -22,7 +22,7 @@ class SaprotContactDataset(LMDBDataset):
             **kwargs:
         """
         super().__init__(**kwargs)
-        self.tokenizer = EsmTokenizer.from_pretrained(tokenizer)
+        self.tokenizer = AutoTokenizer.from_pretrained(tokenizer)
         self.max_length = max_length
 
     def __getitem__(self, index):

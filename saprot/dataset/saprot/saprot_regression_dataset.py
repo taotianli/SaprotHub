@@ -3,7 +3,7 @@ import json
 import random
 
 from ..data_interface import register_dataset
-from transformers import EsmTokenizer, AutoTokenizer
+from transformers import AutoTokenizer
 from ..lmdb_dataset import *
 from ..lmdb_dataset import *
 from utils.others import setup_seed

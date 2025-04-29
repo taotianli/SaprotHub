@@ -16,6 +16,7 @@
 import os
 # Check whether the server is local or from google cloudA model id example
 root_dir = os.getcwd()
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 from google.colab import output
 # output.enable_custom_widget_manager()
@@ -1687,7 +1688,7 @@ def make_predictions(df, rows, num_labels, model_type, model_arg):
   # Load model
   model = my_load_model(config.model)
   tokenizer = AutoTokenizer.from_pretrained(config.model.kwargs.config_path)
-  device = "cpu"
+  device = "cuda" if torch.cuda.is_available() else "cpu"
   model.to(device)
 
   # Start prediction
@@ -2316,7 +2317,7 @@ def choose_training_task():
       data_src_hint,
       data_src_type,
       # data_type_hint,
-      data_type,
+    #   data_type,
       saprothub_data_id,
       saprothub_data_id_hint,
       upload_hint,
@@ -3250,10 +3251,11 @@ def protein_property_prediction():
                 style={'description_width': 'initial'},
                 )
 
-  chain_hint_1 = HTML(markdown.markdown("Chain (to be extracted from the structure):"))
+  chain_hint_1 = HTML(markdown.markdown("Chain (to be extracted from the structure):"), layout=Layout(display="none"))
   input_chain_1 = ipywidgets.Text(value="A",placeholder=f'Enter the name of chain here', layout=Layout(width="250px", height=HEIGHT, display="none"))
-  upload_hint_1 = HTML(markdown.markdown("**Upload protein structure (.pdb / .cif file):**"))
+  upload_hint_1 = HTML(markdown.markdown("**Upload protein structure (.pdb / .cif file):**"), layout=Layout(display="none"))
   upload_items_1 = get_upload_box()
+  set_upload_visibility(upload_items_1, mode="none")
 
   chain_hint_2 = HTML(markdown.markdown("Chain (to be extracted from the structure):"), layout=Layout(display="none"))
   input_chain_2 = ipywidgets.Text(value="A",placeholder=f'Enter the name of chain here', layout=Layout(width="250px", height=HEIGHT, display="none"))
@@ -3276,7 +3278,7 @@ def protein_property_prediction():
       model_arg_box,
       saprothub_link,
       # data_type_hint,
-      data_type_box,
+    #   data_type_box,
       saprothub_data_type_hint,
       upload_type_hint,
       upload_type_box,
@@ -3286,9 +3288,9 @@ def protein_property_prediction():
       upload_hint_1,
       ipywidgets.HBox([input_chain_1, chain_hint_1]),
       *upload_items_1,
-      # upload_hint_2,
-      # ipywidgets.HBox([input_chain_2, chain_hint_2]),
-      # *upload_items_2,
+    #   upload_hint_2,
+    #   ipywidgets.HBox([input_chain_2, chain_hint_2]),
+    #   *upload_items_2,
       save_path_hint,
       start_hint,
       start_btn
@@ -3359,7 +3361,8 @@ def protein_property_prediction():
         custom_display(*items)
 
   def set_input_format():
-    data_type = data_type_box.value
+    # data_type = data_type_box.value
+    data_type = "protein sequence"
     upload_type = upload_type_box.value
     task_type = task_type_box.value
     if "Protein-protein" not in task_type:
@@ -3489,6 +3492,7 @@ def protein_property_prediction():
 
   def start_prediction(button):
     print("Start prediction....")
+
 
     task_type = task_type_box.value
     model_type = model_type_box.value
@@ -4267,7 +4271,7 @@ def obtain_protein_embedding():
       model_arg_box,
       saprothub_link,
       # data_type_hint,
-      data_type_box,
+    #   data_type_box,
       saprothub_data_type_hint,
       # upload_type_hint,
       upload_type_box,

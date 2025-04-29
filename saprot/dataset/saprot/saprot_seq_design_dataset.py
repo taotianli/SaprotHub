@@ -5,7 +5,7 @@ import math
 import os
 
 from torch.utils.data import Subset
-from transformers import EsmTokenizer, AutoTokenizer
+from transformers import AutoTokenizer
 from ..data_interface import register_dataset
 from ..lmdb_dataset import *
 from data.data_transform import *
