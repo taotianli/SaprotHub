@@ -73,9 +73,9 @@ class SaprotPairRegressionDataset(LMDBDataset):
 
     def collate_fn(self, batch):
         seqs_1, seqs_2, label_ids = tuple(zip(*batch))
-        print("Seqs_1:", seqs_1)
-        print("Seqs_2:", seqs_2)
-        print("Label_ids:", label_ids)
+        # print("Seqs_1:", seqs_1)
+        # print("Seqs_2:", seqs_2)
+        # print("Label_ids:", label_ids)
 
         label_ids = torch.tensor(label_ids)
         labels = {"labels": label_ids}

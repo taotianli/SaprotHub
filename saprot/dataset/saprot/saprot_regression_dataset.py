@@ -98,7 +98,7 @@ class SaprotRegressionDataset(LMDBDataset):
 				
 		label = entry['fitness']
 		print("Seq_tokenized:", seq)
-		print("Label:", label)
+		# print("Label:", label)
 		return seq, label
 	
 	def __len__(self):
@@ -111,8 +111,8 @@ class SaprotRegressionDataset(LMDBDataset):
 		
 		encoder_info = self.tokenizer.batch_encode_plus(seqs, return_tensors='pt', padding=True)
 		inputs = {"inputs": encoder_info}
-		print("Seqs:", seqs)
-		print("Inputs:", inputs)
-		print("Labels:", labels)
+		# print("Seqs:", seqs)
+		# print("Inputs:", inputs)
+		# print("Labels:", labels)
 		
 		return inputs, labels

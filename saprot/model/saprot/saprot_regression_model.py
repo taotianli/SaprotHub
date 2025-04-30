@@ -55,8 +55,8 @@ class SaprotRegressionModel(SaprotBaseModel):
             repr = self.model.bert(**inputs).last_hidden_state[:, 0]
             logits = self.model.classifier(repr).squeeze(dim=-1)
 
-        print("Logits:", logits)
-        print("Inputs:", inputs)    
+        # print("Logits:", logits)
+        # print("Inputs:", inputs)    
 
         return logits
 
@@ -64,15 +64,15 @@ class SaprotRegressionModel(SaprotBaseModel):
         fitness = labels['labels'].to(outputs)
         loss = torch.nn.functional.mse_loss(outputs, fitness)
         
-        print("Outputs:", outputs)
-        print("Labels:", fitness)
+        # print("Outputs:", outputs)
+        # print("Labels:", fitness)
         
         # Update metrics
         for metric in self.metrics[stage].values():
             # Training is on half precision, but metrics expect float to compute correctly.
             metric.set_dtype(torch.float32)
             metric.update(outputs.detach(), fitness)
-            print(metric.update(outputs.detach(), fitness))
+            # print(metric.update(outputs.detach(), fitness))
             # print(metric.compute())
 
             

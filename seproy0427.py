@@ -1713,14 +1713,14 @@ def make_predictions(df, rows, num_labels, model_type, model_arg):
   else:
     for sa_seq in tqdm(rows):
       # Add debug prints
-      print("Raw sequence:", sa_seq)
-      print("Tokenizer type:", type(tokenizer))
+      # print("Raw sequence:", sa_seq)
+      # print("Tokenizer type:", type(tokenizer))
       
       inputs = tokenizer(sa_seq, return_tensors="pt")
-      print("Tokenized sequence:", tokenizer.convert_ids_to_tokens(inputs["input_ids"][0]))
-      print("Input sequence length:", len(inputs["input_ids"][0]))
-      print("Tokenizer vocab size:", len(tokenizer))
-      print("Tokenizer special tokens:", tokenizer.special_tokens_map)
+      # print("Tokenized sequence:", tokenizer.convert_ids_to_tokens(inputs["input_ids"][0]))
+      # print("Input sequence length:", len(inputs["input_ids"][0]))
+      # print("Tokenizer vocab size:", len(tokenizer))
+      # print("Tokenizer special tokens:", tokenizer.special_tokens_map)
       with torch.no_grad():
         pred = model(inputs)
 

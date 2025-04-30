@@ -3,7 +3,7 @@ import json
 import random
 
 from ..data_interface import register_dataset
-from transformers import AutoTokenizer
+from transformers import AutoTokenizer, EsmTokenizer
 from ..lmdb_dataset import *
 
 
@@ -41,8 +41,9 @@ class SaprotClassificationDataset(LMDBDataset):
     def __getitem__(self, index):
         entry = json.loads(self._get(index))
         seq = entry['seq']
+        if not isinstance(self.tokenizer, EsmTokenizer):
+            seq = " ".join(seq)
         
-
         # Mask structure tokens
         if self.mask_struc_ratio is not None:
             tokens = self.tokenizer.tokenize(seq)
