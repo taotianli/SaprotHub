@@ -31,6 +31,9 @@ class SaprotPairRegressionDataset(LMDBDataset):
     def __getitem__(self, index):
         entry = json.loads(self._get(index))
         seq_1, seq_2 = entry['seq_1'], entry['seq_2']
+        print("Seq_original_1:", seq_1)
+        print("Seq_original_2:", seq_2)
+
 
         # if not isinstance(self.tokenizer, EsmTokenizer):
         #     seq_1 = " ".join(seq_1)
@@ -70,6 +73,9 @@ class SaprotPairRegressionDataset(LMDBDataset):
 
     def collate_fn(self, batch):
         seqs_1, seqs_2, label_ids = tuple(zip(*batch))
+        print("Seqs_1:", seqs_1)
+        print("Seqs_2:", seqs_2)
+        print("Label_ids:", label_ids)
 
         label_ids = torch.tensor(label_ids)
         labels = {"labels": label_ids}
