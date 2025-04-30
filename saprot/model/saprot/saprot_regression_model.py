@@ -60,6 +60,8 @@ class SaprotRegressionModel(SaprotBaseModel):
         #         inputs["input_ids"] = torch.where(input_ids < vocab_size, input_ids, torch.tensor(unk_id).to(input_ids.device))
         #     repr = self.model.bert(**inputs).last_hidden_state[:, 0]
         #     logits = self.model.classifier(repr).squeeze(dim=-1)
+        print("Logits:", logits)
+        print("Inputs:", inputs)    
 
         return logits
 
