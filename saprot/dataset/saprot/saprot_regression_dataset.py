@@ -3,7 +3,7 @@ import json
 import random
 
 from ..data_interface import register_dataset
-from transformers import AutoTokenizer
+from transformers import AutoTokenizer, EsmTokenizer	
 from ..lmdb_dataset import *
 from ..lmdb_dataset import *
 from utils.others import setup_seed
@@ -51,6 +51,11 @@ class SaprotRegressionDataset(LMDBDataset):
 		entry = json.loads(self._get(index))
 		seq = entry['seq']
 		print("Seq_original:", seq)
+		
+		# Add spaces between amino acids for non-ESM models
+		if not isinstance(self.tokenizer, EsmTokenizer):
+			seq = " ".join(seq)
+			
 		# Mask structure tokens
 		if self.mask_struc_ratio is not None:
 			tokens = self.tokenizer.tokenize(seq)

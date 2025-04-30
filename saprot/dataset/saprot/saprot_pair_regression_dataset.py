@@ -2,7 +2,7 @@ import torch
 import json
 
 from ..lmdb_dataset import LMDBDataset
-from transformers import AutoTokenizer
+from transformers import AutoTokenizer, EsmTokenizer
 from ..data_interface import register_dataset
 
 
@@ -35,9 +35,9 @@ class SaprotPairRegressionDataset(LMDBDataset):
         print("Seq_original_2:", seq_2)
 
 
-        # if not isinstance(self.tokenizer, EsmTokenizer):
-        #     seq_1 = " ".join(seq_1)
-        #     seq_2 = " ".join(seq_2)
+        if not isinstance(self.tokenizer, EsmTokenizer):
+            seq_1 = " ".join(seq_1)
+            seq_2 = " ".join(seq_2)
 
         # Mask structure tokens with pLDDT < threshold
         if self.plddt_threshold is not None:
