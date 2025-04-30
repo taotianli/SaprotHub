@@ -75,8 +75,9 @@ class SaprotRegressionModel(SaprotBaseModel):
             # Training is on half precision, but metrics expect float to compute correctly.
             metric.set_dtype(torch.float32)
             metric.update(outputs.detach(), fitness)
-            print(metric.compute())
-            
+            print(metric.update(outputs.detach(), fitness))
+            # print(metric.compute())
+
             
         if stage == "train":
             log_dict = {"train_loss": loss.item()}
