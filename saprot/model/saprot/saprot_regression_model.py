@@ -71,15 +71,13 @@ class SaprotRegressionModel(SaprotBaseModel):
         print("Labels:", fitness)
         
         # Update metrics
-        print(f"\n=== {stage} metrics ===")
-        for metric_name, metric in self.metrics[stage].items():
+        for metric in self.metrics[stage].values():
             # Training is on half precision, but metrics expect float to compute correctly.
             metric.set_dtype(torch.float32)
             metric.update(outputs.detach(), fitness)
-            # 计算并打印每个指标的当前值
-            current_value = metric.compute()
-            print(f"{metric_name}: {current_value}")
-        
+            print(metric.compute())
+            
+            
         if stage == "train":
             log_dict = {"train_loss": loss.item()}
             self.log_info(log_dict)
