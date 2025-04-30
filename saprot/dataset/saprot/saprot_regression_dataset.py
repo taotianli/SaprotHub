@@ -50,7 +50,7 @@ class SaprotRegressionDataset(LMDBDataset):
 	def __getitem__(self, index):
 		entry = json.loads(self._get(index))
 		seq = entry['seq']
-		print("Seq_original:", seq)
+		# print("Seq_original:", seq)
 		
 		# Add spaces between amino acids for non-ESM models
 		if not isinstance(self.tokenizer, EsmTokenizer):
@@ -97,7 +97,7 @@ class SaprotRegressionDataset(LMDBDataset):
 			entry['fitness'] = (entry['fitness'] - min_norm) / (max_norm - min_norm)
 				
 		label = entry['fitness']
-		print("Seq_tokenized:", seq)
+		# print("Seq_tokenized:", seq)
 		# print("Label:", label)
 		return seq, label
 	
