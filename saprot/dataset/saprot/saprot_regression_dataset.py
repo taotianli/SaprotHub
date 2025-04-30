@@ -104,5 +104,8 @@ class SaprotRegressionDataset(LMDBDataset):
 		
 		encoder_info = self.tokenizer.batch_encode_plus(seqs, return_tensors='pt', padding=True)
 		inputs = {"inputs": encoder_info}
+		print("Seqs:", seqs)
+		print("Inputs:", inputs)
+		print("Labels:", labels)
 		
 		return inputs, labels
