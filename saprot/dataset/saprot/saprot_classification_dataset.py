@@ -81,7 +81,7 @@ class SaprotClassificationDataset(LMDBDataset):
         
         
         seq = " ".join(tokens)
-        
+        seq = "AA" #测试
         if self.use_bias_feature:
             coords = {k: v[:self.max_length] for k, v in entry['coords'].items()}
         else:
@@ -89,7 +89,7 @@ class SaprotClassificationDataset(LMDBDataset):
 
         label = entry["label"] if self.preset_label is None else self.preset_label
         print('seq3:', seq)
-        print('label:', label)
+        # print('label:', label)
 
         return seq, label, coords
 
@@ -101,11 +101,12 @@ class SaprotClassificationDataset(LMDBDataset):
         
         label_ids = torch.tensor(label_ids, dtype=torch.long)
         labels = {"labels": label_ids}
-        print("labels:", labels)
+        # print("labels:", labels)
         encoder_info = self.tokenizer.batch_encode_plus(seqs, return_tensors='pt', padding=True)
 
         
         inputs = {"inputs": encoder_info}
+        print('inputs',inputs)
         if self.use_bias_feature:
             inputs["coords"] = coords
 
