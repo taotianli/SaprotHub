@@ -61,6 +61,8 @@ class SaprotClassificationDataset(LMDBDataset):
                 tokens[idx] = tokens[idx][:-1] + "#"
             
             seq = "".join(tokens)
+        
+        print('seq2:', seq)
 
 
         # Mask structure tokens with pLDDT < threshold
