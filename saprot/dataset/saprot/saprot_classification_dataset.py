@@ -39,6 +39,7 @@ class SaprotClassificationDataset(LMDBDataset):
         self.plddt_threshold = plddt_threshold
 
     def __getitem__(self, index):
+        print("tokenizer:", self.tokenizer)
         entry = json.loads(self._get(index))
         seq = entry['seq']
         print("seq", seq)
@@ -77,7 +78,7 @@ class SaprotClassificationDataset(LMDBDataset):
                     seq += token
 
         tokens = self.tokenizer.tokenize(seq)[:self.max_length]
-        print('seq2:', seq)
+        
         
         seq = " ".join(tokens)
         
@@ -100,7 +101,7 @@ class SaprotClassificationDataset(LMDBDataset):
         
         label_ids = torch.tensor(label_ids, dtype=torch.long)
         labels = {"labels": label_ids}
-    
+        print("labels:", labels)
         encoder_info = self.tokenizer.batch_encode_plus(seqs, return_tensors='pt', padding=True)
 
         
