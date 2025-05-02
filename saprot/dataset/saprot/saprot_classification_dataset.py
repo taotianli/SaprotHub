@@ -41,6 +41,7 @@ class SaprotClassificationDataset(LMDBDataset):
     def __getitem__(self, index):
         entry = json.loads(self._get(index))
         seq = entry['seq']
+        print("seq", seq)
         if not isinstance(self.tokenizer, EsmTokenizer):
             seq = " ".join(seq)
         
