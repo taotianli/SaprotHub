@@ -43,8 +43,20 @@ class SaprotClassificationDataset(LMDBDataset):
         entry = json.loads(self._get(index))
         seq = entry['seq']
         print("seq1: ", seq)
+
+        tokens = self.tokenizer.tokenize(seq)
+        valid_tokens = []
+        for token in tokens:
+            if token in self.tokenizer.vocab:
+                valid_tokens.append(token)
+            else:
+                # 如果token不在词表中,用UNK token替换
+                valid_tokens.append(self.tokenizer.unk_token)
+
         if not isinstance(self.tokenizer, EsmTokenizer) and 'esm1b' not in self.tokenizer.name_or_path.lower():
-            seq = " ".join(seq)
+            seq = " ".join(valid_tokens)
+        else:
+            seq = "".join(valid_tokens)
         
         # Mask structure tokens
         if self.mask_struc_ratio is not None:
@@ -76,8 +88,10 @@ class SaprotClassificationDataset(LMDBDataset):
 
         tokens = self.tokenizer.tokenize(seq)[:self.max_length]
         
-        if 'esm1b' in self.tokenizer.name_or_path.lower():
-            seq = seq
+        # if 'esm1b' in self.tokenizer.name_or_path.lower():
+        #     seq = seq
+        # else:
+        #     seq = " ".join(tokens)
         
         if self.use_bias_feature:
             coords = {k: v[:self.max_length] for k, v in entry['coords'].items()}
