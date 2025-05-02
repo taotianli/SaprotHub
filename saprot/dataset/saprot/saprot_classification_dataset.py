@@ -62,7 +62,7 @@ class SaprotClassificationDataset(LMDBDataset):
             
             seq = "".join(tokens)
         
-        print('seq2:', seq)
+        
 
 
         # Mask structure tokens with pLDDT < threshold
@@ -77,6 +77,7 @@ class SaprotClassificationDataset(LMDBDataset):
                     seq += token
 
         tokens = self.tokenizer.tokenize(seq)[:self.max_length]
+        print('seq2:', seq)
         
         seq = " ".join(tokens)
         
@@ -86,6 +87,8 @@ class SaprotClassificationDataset(LMDBDataset):
             coords = None
 
         label = entry["label"] if self.preset_label is None else self.preset_label
+        print('seq3:', seq)
+        print('label:', label)
 
         return seq, label, coords
 
