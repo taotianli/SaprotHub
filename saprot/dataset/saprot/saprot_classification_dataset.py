@@ -45,9 +45,10 @@ class SaprotClassificationDataset(LMDBDataset):
         print("seq1: ", seq)
 
         tokens = self.tokenizer.tokenize(seq)
+        vocab = self.tokenizer.get_vocab()
         valid_tokens = []
         for token in tokens:
-            if token in self.tokenizer.vocab:
+            if token in vocab:
                 valid_tokens.append(token)
             else:
                 # 如果token不在词表中,用UNK token替换
