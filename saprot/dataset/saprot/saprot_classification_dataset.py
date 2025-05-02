@@ -81,7 +81,7 @@ class SaprotClassificationDataset(LMDBDataset):
         
         
         seq = " ".join(tokens)
-        seq = "AA" #测试
+        seq = "MLKFKYGV" #测试
         if self.use_bias_feature:
             coords = {k: v[:self.max_length] for k, v in entry['coords'].items()}
         else:
