@@ -39,7 +39,7 @@ class SaprotClassificationDataset(LMDBDataset):
         self.plddt_threshold = plddt_threshold
 
     def __getitem__(self, index):
-        print("tokenizer:", self.tokenizer)
+        # print("tokenizer:", self.tokenizer)
         entry = json.loads(self._get(index))
         seq = entry['seq']
         print("seq", seq)
@@ -79,16 +79,16 @@ class SaprotClassificationDataset(LMDBDataset):
 
         tokens = self.tokenizer.tokenize(seq)[:self.max_length]
         
-        
-        seq = " ".join(tokens)
-        seq = "MLKFKYGV" #测试
+        if 'esm1b' not in self.tokenizer.name_or_path.lower():
+            seq = " ".join(tokens)
+            
         if self.use_bias_feature:
             coords = {k: v[:self.max_length] for k, v in entry['coords'].items()}
         else:
             coords = None
 
         label = entry["label"] if self.preset_label is None else self.preset_label
-        print('seq3:', seq)
+        # print('seq3:', seq)
         # print('label:', label)
 
         return seq, label, coords
