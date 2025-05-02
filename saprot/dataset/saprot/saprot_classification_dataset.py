@@ -42,7 +42,7 @@ class SaprotClassificationDataset(LMDBDataset):
         # print("tokenizer:", self.tokenizer)
         entry = json.loads(self._get(index))
         seq = entry['seq']
-        print("seq", seq)
+        print("seq1: ", seq)
         if not isinstance(self.tokenizer, EsmTokenizer):
             seq = " ".join(seq)
         
@@ -63,9 +63,6 @@ class SaprotClassificationDataset(LMDBDataset):
             
             seq = "".join(tokens)
         
-        
-
-
         # Mask structure tokens with pLDDT < threshold
         if self.plddt_threshold is not None:
             plddt = entry["plddt"]
@@ -81,14 +78,14 @@ class SaprotClassificationDataset(LMDBDataset):
         
         if 'esm1b' not in self.tokenizer.name_or_path.lower():
             seq = " ".join(tokens)
-            
+
         if self.use_bias_feature:
             coords = {k: v[:self.max_length] for k, v in entry['coords'].items()}
         else:
             coords = None
 
         label = entry["label"] if self.preset_label is None else self.preset_label
-        # print('seq3:', seq)
+        print('seq3:', seq)
         # print('label:', label)
 
         return seq, label, coords
@@ -106,7 +103,7 @@ class SaprotClassificationDataset(LMDBDataset):
 
         
         inputs = {"inputs": encoder_info}
-        print('inputs',inputs)
+        # print('inputs: ',inputs)
         if self.use_bias_feature:
             inputs["coords"] = coords
 

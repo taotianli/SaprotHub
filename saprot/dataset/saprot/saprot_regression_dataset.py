@@ -50,10 +50,10 @@ class SaprotRegressionDataset(LMDBDataset):
 	def __getitem__(self, index):
 		entry = json.loads(self._get(index))
 		seq = entry['seq']
-		print("Seq_original:", seq)
+		# print("Seq_original:", seq)
 		
-		# Add spaces between amino acids for non-ESM models, except ESM1b
-		if not isinstance(self.tokenizer, EsmTokenizer) and 'esm1b' not in self.tokenizer.name_or_path.lower():
+		# Add spaces between amino acids for non-ESM models
+		if not isinstance(self.tokenizer, EsmTokenizer):
 			seq = " ".join(seq)
 			
 		# Mask structure tokens
