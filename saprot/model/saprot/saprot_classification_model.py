@@ -39,7 +39,6 @@ class SaprotClassificationModel(SaprotBaseModel):
             logits = self.model(**inputs).logits
 
         elif hasattr(self.model, "bert"):
-            # 删除token_type_ids,因为对于单序列任务不需要它
             if "token_type_ids" in inputs:
                 del inputs["token_type_ids"]
             logits = self.model(**inputs).logits
@@ -51,6 +50,7 @@ class SaprotClassificationModel(SaprotBaseModel):
     def loss_func(self, stage, logits, labels):
         label = labels['labels']
         loss = cross_entropy(logits, label)
+        print(loss, logits)
 
         # Update metrics
         for metric in self.metrics[stage].values():

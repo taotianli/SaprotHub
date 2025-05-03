@@ -40,12 +40,10 @@ class SaprotClassificationDataset(LMDBDataset):
 
     def __getitem__(self, index):
         entry = json.loads(self._get(index))
-        seq = entry['seq'][:self.max_length-2]
-
+        seq = entry['seq']
         if not isinstance(self.tokenizer, EsmTokenizer):
             seq = " ".join(seq)
-        # print('seq original:', seq)
-
+        
         # Mask structure tokens
         if self.mask_struc_ratio is not None:
             tokens = self.tokenizer.tokenize(seq)
@@ -63,6 +61,7 @@ class SaprotClassificationDataset(LMDBDataset):
             
             seq = "".join(tokens)
 
+
         # Mask structure tokens with pLDDT < threshold
         if self.plddt_threshold is not None:
             plddt = entry["plddt"]
@@ -75,6 +74,7 @@ class SaprotClassificationDataset(LMDBDataset):
                     seq += token
 
         tokens = self.tokenizer.tokenize(seq)[:self.max_length]
+        
         seq = " ".join(tokens)
         
         if self.use_bias_feature:
@@ -83,8 +83,6 @@ class SaprotClassificationDataset(LMDBDataset):
             coords = None
 
         label = entry["label"] if self.preset_label is None else self.preset_label
-
-        # print('Seq: ', seq)
 
         return seq, label, coords
 
@@ -96,6 +94,7 @@ class SaprotClassificationDataset(LMDBDataset):
         
         label_ids = torch.tensor(label_ids, dtype=torch.long)
         labels = {"labels": label_ids}
+    
         encoder_info = self.tokenizer.batch_encode_plus(seqs, return_tensors='pt', padding=True)
 
         
