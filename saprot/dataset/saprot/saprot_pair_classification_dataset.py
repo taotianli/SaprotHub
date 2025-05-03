@@ -30,7 +30,7 @@ class SaprotPairClassificationDataset(LMDBDataset):
 
     def __getitem__(self, index):
         entry = json.loads(self._get(index))
-        seq_1, seq_2 = entry['seq_1'], entry['seq_2']
+        seq_1, seq_2 = entry['seq_1'][::2], entry['seq_2'][::2]
 
         if not isinstance(self.tokenizer, EsmTokenizer):
             seq_1 = " ".join(seq_1)

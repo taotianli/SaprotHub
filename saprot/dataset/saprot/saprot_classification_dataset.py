@@ -41,7 +41,7 @@ class SaprotClassificationDataset(LMDBDataset):
     def __getitem__(self, index):
         entry = json.loads(self._get(index))
         seq = entry['seq'][::2]
-        print("Seq_original length:", len(seq))
+        # print("Seq_original length:", len(seq))
 
         # Mask structure tokens
         if self.mask_struc_ratio is not None:
@@ -80,8 +80,6 @@ class SaprotClassificationDataset(LMDBDataset):
             coords = None
 
         label = entry["label"] if self.preset_label is None else self.preset_label
-        # print('seq3:', seq)
-        # print('label:', label)
 
         return seq, label, coords
 
@@ -93,14 +91,11 @@ class SaprotClassificationDataset(LMDBDataset):
         
         label_ids = torch.tensor(label_ids, dtype=torch.long)
         labels = {"labels": label_ids}
-        # print("labels:", labels)
         encoder_info = self.tokenizer.batch_encode_plus(seqs, return_tensors='pt', padding=True)
 
         
         inputs = {"inputs": encoder_info}
-        # print('inputs: ',inputs)
         if self.use_bias_feature:
             inputs["coords"] = coords
-        # print('embed success')
 
         return inputs, labels

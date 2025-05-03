@@ -24,14 +24,7 @@ class SaprotClassificationModel(SaprotBaseModel):
     def forward(self, inputs, coords=None):
         if coords is not None:
             inputs = self.add_bias_feature(inputs, coords)
-        # print('inputs:', inputs)
-        
-        # 检查并截断过长的序列
-        # max_len = 1000
-        # if inputs['input_ids'].shape[1] > max_len:
-        #     print(f"Input sequence length {inputs['input_ids'].shape[1]} exceeds {max_len}, truncating...")
-        #     inputs['input_ids'] = inputs['input_ids'][:, :max_len]
-        #     inputs['attention_mask'] = inputs['attention_mask'][:, :max_len]
+
         
         # If backbone is frozen, the embedding will be the average of all residues
         if self.freeze_backbone:
@@ -44,15 +37,11 @@ class SaprotClassificationModel(SaprotBaseModel):
 
         # For ESM models
         elif hasattr(self.model, "esm"):    
-            # print('esm')
-            print("Input shape:", inputs['input_ids'].shape)
             logits = self.model(**inputs).logits
-            print("Logits shape:", inputs['input_ids'].shape, logits.shape)
 
         elif hasattr(self.model, "bert"):
             logits = self.model(**inputs).logits
             
-        # print('logits:', logits)
         return logits
 
     def loss_func(self, stage, logits, labels):
