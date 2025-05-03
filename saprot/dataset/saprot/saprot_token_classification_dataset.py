@@ -26,7 +26,7 @@ class SaprotTokenClassificationDataset(LMDBDataset):
 
     def __getitem__(self, index):
         entry = json.loads(self._get(index))
-        seq = entry['seq'][::2]
+        seq = entry['seq'][:self.max_length]
 
         if not isinstance(self.tokenizer, EsmTokenizer):
             seq = " ".join(seq)
