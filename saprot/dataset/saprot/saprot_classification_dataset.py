@@ -12,7 +12,7 @@ class SaprotClassificationDataset(LMDBDataset):
     def __init__(self,
                  tokenizer: str,
                  use_bias_feature: bool = False,
-                 max_length: int = 1024,
+                 max_length: int = 2048,
                  preset_label: int = None,
                  mask_struc_ratio: float = None,
                  mask_seed: int = 20000812,
