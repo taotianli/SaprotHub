@@ -24,7 +24,7 @@ class SaprotClassificationModel(SaprotBaseModel):
     def forward(self, inputs, coords=None):
         if coords is not None:
             inputs = self.add_bias_feature(inputs, coords)
-        print('inputs:', inputs)
+        # print('inputs:', inputs)
         
         # 检查并截断过长的序列
         # max_len = 1000
@@ -44,15 +44,15 @@ class SaprotClassificationModel(SaprotBaseModel):
 
         # For ESM models
         elif hasattr(self.model, "esm"):    
-            print('esm')
+            # print('esm')
             print("Input shape:", inputs['input_ids'].shape)
             logits = self.model(**inputs).logits
-            print("Logits shape:", logits.shape)
+            print("Logits shape:", inputs['input_ids'].shape, logits.shape)
 
         elif hasattr(self.model, "bert"):
             logits = self.model(**inputs).logits
             
-        print('logits:', logits)
+        # print('logits:', logits)
         return logits
 
     def loss_func(self, stage, logits, labels):
