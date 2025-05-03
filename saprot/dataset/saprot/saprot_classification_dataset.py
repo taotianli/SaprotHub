@@ -84,7 +84,7 @@ class SaprotClassificationDataset(LMDBDataset):
 
         label = entry["label"] if self.preset_label is None else self.preset_label
 
-        print('Seq: ', seq)
+        # print('Seq: ', seq)
 
         return seq, label, coords
 
