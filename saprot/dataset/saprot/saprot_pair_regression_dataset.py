@@ -62,7 +62,7 @@ class SaprotPairRegressionDataset(LMDBDataset):
 
         tokens = self.tokenizer.tokenize(seq_2)[:self.max_length-2]
         seq_2 = " ".join(tokens)
-        print(len(seq_1), len(seq_2), len(entry["label"]))
+        print(len(seq_1), len(seq_2), entry["label"])
 
         return seq_1, seq_2, entry["label"]
 
