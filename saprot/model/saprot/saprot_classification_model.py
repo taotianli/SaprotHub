@@ -22,19 +22,16 @@ class SaprotClassificationModel(SaprotBaseModel):
         return {f"{stage}_acc": torchmetrics.Accuracy()}
 
     def forward(self, inputs, coords=None):
-        # vocab_size = self.model.esm.embeddings.word_embeddings.num_embeddings
-        # input_ids = inputs["input_ids"]
-        # print('inputs1:', inputs)
-        # if torch.max(input_ids) >= vocab_size:
-        #     print(f"Warning: Found token IDs exceeding vocabulary size. Max ID: {torch.max(input_ids).item()}, Vocab size: {vocab_size}")
-        #     # 将超出范围的ID替换为UNK token ID
-        #     unk_id = self.tokenizer.unk_token_id if self.tokenizer.unk_token_id is not None else 0
-        #     inputs["input_ids"] = torch.where(input_ids < vocab_size, input_ids, torch.tensor(unk_id).to(input_ids.device))
-        # print('inputs2:', inputs)
-        
         if coords is not None:
             inputs = self.add_bias_feature(inputs, coords)
-        print('inputs', inputs)
+        print('inputs:', inputs)
+        
+        # 打印inputs的详细信息
+        print("Inputs details:")
+        for key, value in inputs["inputs"].items():
+            if isinstance(value, torch.Tensor):
+                print(f"- {key} shape: {value.shape}")
+                print(f"- {key} content: {value}")
         
         # If backbone is frozen, the embedding will be the average of all residues
         if self.freeze_backbone:
@@ -48,12 +45,19 @@ class SaprotClassificationModel(SaprotBaseModel):
         # For ESM models
         elif hasattr(self.model, "esm"):    
             print('esm')
-            logits = self.model(**inputs).logits.squeeze(dim=-1)
+            # 打印传入模型的实际inputs
+            print("Actual inputs to model:")
+            actual_inputs = inputs["inputs"]
+            for key, value in actual_inputs.items():
+                if isinstance(value, torch.Tensor):
+                    print(f"- {key} shape: {value.shape}")
+            logits = self.model(**actual_inputs).logits.squeeze(dim=-1)
+            print("Logits shape:", logits.shape)
 
         elif hasattr(self.model, "bert"):
             logits = self.model(**inputs).logits
             
-        print('logits', logits, inputs)
+        print('logits:', logits)
         return logits
 
     def loss_func(self, stage, logits, labels):
