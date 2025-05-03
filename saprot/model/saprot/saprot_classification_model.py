@@ -44,7 +44,7 @@ class SaprotClassificationModel(SaprotBaseModel):
                 del inputs["token_type_ids"]
             logits = self.model(**inputs).logits
 
-        print('Inputs & logits', inputs, logits)
+        # print('Inputs & logits', inputs, logits)
             
         return logits
 
