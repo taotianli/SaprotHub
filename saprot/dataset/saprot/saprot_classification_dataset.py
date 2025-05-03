@@ -40,8 +40,8 @@ class SaprotClassificationDataset(LMDBDataset):
 
     def __getitem__(self, index):
         entry = json.loads(self._get(index))
-        seq = entry['seq'][:self.max_length]
-        # print("Seq_original length:", len(seq))
+        seq = entry['seq'][:self.max_length-2]
+        print("Seq_original length:", len(seq))
 
         # Mask structure tokens
         if self.mask_struc_ratio is not None:

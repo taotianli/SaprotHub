@@ -30,7 +30,7 @@ class SaprotPairRegressionDataset(LMDBDataset):
 
     def __getitem__(self, index):
         entry = json.loads(self._get(index))
-        seq_1, seq_2 = entry['seq_1'][:self.max_length], entry['seq_2'][:self.max_length]
+        seq_1, seq_2 = entry['seq_1'][:self.max_length-2], entry['seq_2'][:self.max_length-2]
 
         if not isinstance(self.tokenizer, EsmTokenizer):
             seq_1 = " ".join(seq_1)
@@ -57,11 +57,12 @@ class SaprotPairRegressionDataset(LMDBDataset):
                 else:
                     seq_2 += token
 
-        tokens = self.tokenizer.tokenize(seq_1)[:self.max_length]
+        tokens = self.tokenizer.tokenize(seq_1)[:self.max_length-2]
         seq_1 = " ".join(tokens)
 
-        tokens = self.tokenizer.tokenize(seq_2)[:self.max_length]
+        tokens = self.tokenizer.tokenize(seq_2)[:self.max_length-2]
         seq_2 = " ".join(tokens)
+        print(len(seq_1), len(seq_2), len(entry["label"]))
 
         return seq_1, seq_2, entry["label"]
 
