@@ -26,12 +26,12 @@ class SaprotClassificationModel(SaprotBaseModel):
             inputs = self.add_bias_feature(inputs, coords)
         print('inputs:', inputs)
         
-        # 打印inputs的详细信息
-        print("Inputs details:")
-        for key, value in inputs["inputs"].items():
-            if isinstance(value, torch.Tensor):
-                print(f"- {key} shape: {value.shape}")
-                print(f"- {key} content: {value}")
+        # # 打印inputs的详细信息
+        # print("Inputs details:")
+        # for key, value in inputs["inputs_ids"].items():
+        #     if isinstance(value, torch.Tensor):
+        #         print(f"- {key} shape: {value.shape}")
+        #         print(f"- {key} content: {value}")
         
         # If backbone is frozen, the embedding will be the average of all residues
         if self.freeze_backbone:
@@ -47,10 +47,8 @@ class SaprotClassificationModel(SaprotBaseModel):
             print('esm')
             # 打印传入模型的实际inputs
             print("Actual inputs to model:")
-            actual_inputs = inputs["inputs"]
-            for key, value in actual_inputs.items():
-                if isinstance(value, torch.Tensor):
-                    print(f"- {key} shape: {value.shape}")
+            actual_inputs = inputs["inputs_ids"]
+            print('actual_inputs:', actual_inputs.shape)
             logits = self.model(**actual_inputs).logits.squeeze(dim=-1)
             print("Logits shape:", logits.shape)
 
