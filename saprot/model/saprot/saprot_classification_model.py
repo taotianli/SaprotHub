@@ -48,7 +48,7 @@ class SaprotClassificationModel(SaprotBaseModel):
         # For ESM models
         elif hasattr(self.model, "esm"):    
             print('esm')
-            logits = self.model(**inputs).logits
+            logits = self.model(**inputs).logits.squeeze(dim=-1)
 
         elif hasattr(self.model, "bert"):
             logits = self.model(**inputs).logits
