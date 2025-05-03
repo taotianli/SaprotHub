@@ -48,7 +48,7 @@ class SaprotClassificationModel(SaprotBaseModel):
     def loss_func(self, stage, logits, labels):
         label = labels['labels']
         loss = cross_entropy(logits, label)
-        print(loss, logits)
+        # print(loss, logits)
 
         # Update metrics
         for metric in self.metrics[stage].values():
