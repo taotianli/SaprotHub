@@ -27,11 +27,11 @@ class SaprotClassificationModel(SaprotBaseModel):
         print('inputs:', inputs)
         
         # 检查并截断过长的序列
-        max_len = 1000
-        if inputs['input_ids'].shape[1] > max_len:
-            print(f"Input sequence length {inputs['input_ids'].shape[1]} exceeds {max_len}, truncating...")
-            inputs['input_ids'] = inputs['input_ids'][:, :max_len]
-            inputs['attention_mask'] = inputs['attention_mask'][:, :max_len]
+        # max_len = 1000
+        # if inputs['input_ids'].shape[1] > max_len:
+        #     print(f"Input sequence length {inputs['input_ids'].shape[1]} exceeds {max_len}, truncating...")
+        #     inputs['input_ids'] = inputs['input_ids'][:, :max_len]
+        #     inputs['attention_mask'] = inputs['attention_mask'][:, :max_len]
         
         # If backbone is frozen, the embedding will be the average of all residues
         if self.freeze_backbone:
