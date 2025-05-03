@@ -42,7 +42,7 @@ class SaprotClassificationModel(SaprotBaseModel):
 
         elif hasattr(self.model, "bert"):
             logits = self.model(**inputs).logits
-        print('Inputs & logits', inputs, logits)
+        # print('Inputs & logits', inputs, logits)
             
         return logits
 
