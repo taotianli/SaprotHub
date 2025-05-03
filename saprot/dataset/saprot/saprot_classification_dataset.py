@@ -39,26 +39,9 @@ class SaprotClassificationDataset(LMDBDataset):
         self.plddt_threshold = plddt_threshold
 
     def __getitem__(self, index):
-        # print("tokenizer:", self.tokenizer)
         entry = json.loads(self._get(index))
         seq = entry['seq']
-        print("seq1: ", seq)
 
-        tokens = self.tokenizer.tokenize(seq)
-        vocab = self.tokenizer.get_vocab()
-        valid_tokens = []
-        for token in tokens:
-            if token in vocab:
-                valid_tokens.append(token)
-            else:
-                # 如果token不在词表中,用UNK token替换
-                valid_tokens.append(self.tokenizer.unk_token)
-
-        if not isinstance(self.tokenizer, EsmTokenizer) and 'esm1b' not in self.tokenizer.name_or_path.lower():
-            seq = " ".join(valid_tokens)
-        else:
-            seq = "".join(valid_tokens)
-        
         # Mask structure tokens
         if self.mask_struc_ratio is not None:
             tokens = self.tokenizer.tokenize(seq)
@@ -75,7 +58,7 @@ class SaprotClassificationDataset(LMDBDataset):
                 tokens[idx] = tokens[idx][:-1] + "#"
             
             seq = "".join(tokens)
-        
+
         # Mask structure tokens with pLDDT < threshold
         if self.plddt_threshold is not None:
             plddt = entry["plddt"]
@@ -88,11 +71,7 @@ class SaprotClassificationDataset(LMDBDataset):
                     seq += token
 
         tokens = self.tokenizer.tokenize(seq)[:self.max_length]
-        
-        # if 'esm1b' in self.tokenizer.name_or_path.lower():
-        #     seq = seq
-        # else:
-        #     seq = " ".join(tokens)
+        seq = " ".join(tokens)
         
         if self.use_bias_feature:
             coords = {k: v[:self.max_length] for k, v in entry['coords'].items()}
@@ -121,5 +100,6 @@ class SaprotClassificationDataset(LMDBDataset):
         # print('inputs: ',inputs)
         if self.use_bias_feature:
             inputs["coords"] = coords
+        print('embed success')
 
         return inputs, labels
