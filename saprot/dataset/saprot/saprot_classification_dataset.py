@@ -12,7 +12,7 @@ class SaprotClassificationDataset(LMDBDataset):
     def __init__(self,
                  tokenizer: str,
                  use_bias_feature: bool = False,
-                 max_length: int = 2048,
+                 max_length: int = 1024,
                  preset_label: int = None,
                  mask_struc_ratio: float = None,
                  mask_seed: int = 20000812,
@@ -40,7 +40,7 @@ class SaprotClassificationDataset(LMDBDataset):
 
     def __getitem__(self, index):
         entry = json.loads(self._get(index))
-        seq = entry['seq']
+        seq = entry['seq'][::2]
 
         # Mask structure tokens
         if self.mask_struc_ratio is not None:
