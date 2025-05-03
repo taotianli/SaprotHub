@@ -22,6 +22,21 @@ class SaprotClassificationModel(SaprotBaseModel):
         return {f"{stage}_acc": torchmetrics.Accuracy()}
 
     def forward(self, inputs, coords=None):
+        vocab_size = self.model.bert.embeddings.word_embeddings.num_embeddings
+        input_ids = inputs["input_ids"]
+        print('inputs1:', inputs)
+        if torch.max(input_ids) >= vocab_size:
+            print(f"Warning: Found token IDs exceeding vocabulary size. Max ID: {torch.max(input_ids).item()}, Vocab size: {vocab_size}")
+            # 将超出范围的ID替换为UNK token ID
+            unk_id = self.tokenizer.unk_token_id if self.tokenizer.unk_token_id is not None else 0
+            inputs["input_ids"] = torch.where(input_ids < vocab_size, input_ids, torch.tensor(unk_id).to(input_ids.device))
+        print('inputs2:', inputs)
+        # 打印模型的所有属性
+        print("Model attributes:")
+        for attr in dir(self.model):
+            if not attr.startswith('_'):  # 不打印私有属性
+                print(f"- {attr}")
+        
         if coords is not None:
             inputs = self.add_bias_feature(inputs, coords)
         print('inputs', inputs)
