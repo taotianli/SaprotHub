@@ -22,7 +22,7 @@ class SaprotClassificationModel(SaprotBaseModel):
         return {f"{stage}_acc": torchmetrics.Accuracy()}
 
     def forward(self, inputs, coords=None):
-        vocab_size = self.model.bert.embeddings.word_embeddings.num_embeddings
+        vocab_size = self.model.esm.embeddings.word_embeddings.num_embeddings
         input_ids = inputs["input_ids"]
         print('inputs1:', inputs)
         if torch.max(input_ids) >= vocab_size:
