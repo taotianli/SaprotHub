@@ -62,7 +62,6 @@ class SaprotPairRegressionDataset(LMDBDataset):
 
         tokens = self.tokenizer.tokenize(seq_2)[:self.max_length-2]
         seq_2 = " ".join(tokens)
-        print(len(seq_1), len(seq_2), entry["label"])
 
         return seq_1, seq_2, entry["label"]
 
@@ -71,9 +70,6 @@ class SaprotPairRegressionDataset(LMDBDataset):
 
     def collate_fn(self, batch):
         seqs_1, seqs_2, label_ids = tuple(zip(*batch))
-        # print("Seqs_1:", seqs_1)
-        # print("Seqs_2:", seqs_2)
-        # print("Label_ids:", label_ids)
 
         label_ids = torch.tensor(label_ids)
         labels = {"labels": label_ids}

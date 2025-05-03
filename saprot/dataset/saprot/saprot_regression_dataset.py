@@ -50,7 +50,6 @@ class SaprotRegressionDataset(LMDBDataset):
 	def __getitem__(self, index):
 		entry = json.loads(self._get(index))
 		seq = entry['seq'][:self.max_length-2]
-		print("Seq_original length:", len(seq))
 		
 		# Add spaces between amino acids for non-ESM models
 		if not isinstance(self.tokenizer, EsmTokenizer):
