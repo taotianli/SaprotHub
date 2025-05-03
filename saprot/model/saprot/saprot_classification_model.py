@@ -25,8 +25,6 @@ class SaprotClassificationModel(SaprotBaseModel):
         if coords is not None:
             inputs = self.add_bias_feature(inputs, coords)
         
-        
-        
         # If backbone is frozen, the embedding will be the average of all residues
         if self.freeze_backbone:
             repr = torch.stack(self.get_hidden_states_from_dict(inputs, reduction="mean"))
@@ -42,7 +40,8 @@ class SaprotClassificationModel(SaprotBaseModel):
 
         elif hasattr(self.model, "bert"):
             logits = self.model(**inputs).logits
-        # print('Inputs & logits', inputs, logits)
+            
+        print('Inputs & logits', inputs, logits)
             
         return logits
 
