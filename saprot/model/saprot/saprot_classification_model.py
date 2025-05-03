@@ -24,7 +24,8 @@ class SaprotClassificationModel(SaprotBaseModel):
     def forward(self, inputs, coords=None):
         if coords is not None:
             inputs = self.add_bias_feature(inputs, coords)
-
+        
+        
         
         # If backbone is frozen, the embedding will be the average of all residues
         if self.freeze_backbone:
@@ -41,6 +42,7 @@ class SaprotClassificationModel(SaprotBaseModel):
 
         elif hasattr(self.model, "bert"):
             logits = self.model(**inputs).logits
+        print('Inputs & logits', inputs, logits)
             
         return logits
 
