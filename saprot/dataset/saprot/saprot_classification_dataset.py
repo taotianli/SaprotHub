@@ -43,7 +43,7 @@ class SaprotClassificationDataset(LMDBDataset):
         seq = entry['seq'][:self.max_length-2]
         if not isinstance(self.tokenizer, EsmTokenizer):
             seq = " ".join(seq)
-        
+        print('seq', seq)
         # Mask structure tokens
         if self.mask_struc_ratio is not None:
             tokens = self.tokenizer.tokenize(seq)
@@ -74,6 +74,7 @@ class SaprotClassificationDataset(LMDBDataset):
                     seq += token
 
         tokens = self.tokenizer.tokenize(seq)[:self.max_length]
+        print('tokens', tokens)
         
         seq = " ".join(tokens)
         
