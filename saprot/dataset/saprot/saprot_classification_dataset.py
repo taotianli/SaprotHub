@@ -44,7 +44,7 @@ class SaprotClassificationDataset(LMDBDataset):
     def __getitem__(self, index):
         entry = json.loads(self._get(index))
         seq = entry['seq'][:self.max_length-2]
-        print('Original sequence:', seq)
+        # print('Original sequence:', seq)
         
         # 根据模型类型处理序列
         if self.is_saprot_model:
@@ -53,7 +53,7 @@ class SaprotClassificationDataset(LMDBDataset):
             for aa in seq:
                 processed_seq.append(aa + "#")
             seq = processed_seq
-        print('Processed sequence:', seq)
+        # print('Processed sequence:', seq)
         # 将序列用空格连接
         seq = " ".join(seq)
         
@@ -111,7 +111,7 @@ class SaprotClassificationDataset(LMDBDataset):
         encoder_info = self.tokenizer.batch_encode_plus(seqs, return_tensors='pt', padding=True)
 
         inputs = {"inputs": encoder_info}
-        print('Inputs:', inputs)
+        # print('Inputs:', inputs)
         if self.use_bias_feature:
             inputs["coords"] = coords
 
