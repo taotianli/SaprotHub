@@ -37,13 +37,26 @@ class SaprotClassificationDataset(LMDBDataset):
         self.mask_struc_ratio = mask_struc_ratio
         self.mask_seed = mask_seed
         self.plddt_threshold = plddt_threshold
+        
+        # 判断是否是saprot模型，通过检查tokenizer名称
+        self.is_saprot_model = 'saprot' in tokenizer.lower() if isinstance(tokenizer, str) else False
 
     def __getitem__(self, index):
         entry = json.loads(self._get(index))
         seq = entry['seq'][:self.max_length-2]
-        # if not isinstance(self.tokenizer, EsmTokenizer):
+        print('Original sequence:', seq)
+        
+        # 根据模型类型处理序列
+        if self.is_saprot_model:
+            # 为saprot模型，为每个氨基酸添加"#"后缀
+            processed_seq = []
+            for aa in seq:
+                processed_seq.append(aa + "#")
+            seq = processed_seq
+        print('Processed sequence:', seq)
+        # 将序列用空格连接
         seq = " ".join(seq)
-        # print('seq', seq)
+        
         # Mask structure tokens
         if self.mask_struc_ratio is not None:
             tokens = self.tokenizer.tokenize(seq)
@@ -74,7 +87,6 @@ class SaprotClassificationDataset(LMDBDataset):
                     seq += token
 
         tokens = self.tokenizer.tokenize(seq)[:self.max_length]
-        # print('tokens', tokens)
         
         seq = " ".join(tokens)
         
@@ -98,12 +110,9 @@ class SaprotClassificationDataset(LMDBDataset):
     
         encoder_info = self.tokenizer.batch_encode_plus(seqs, return_tensors='pt', padding=True)
 
-        
         inputs = {"inputs": encoder_info}
+        print('Inputs:', inputs)
         if self.use_bias_feature:
             inputs["coords"] = coords
-        # print('seqs', seqs)
-        # print('inputs', inputs)
-
 
         return inputs, labels
