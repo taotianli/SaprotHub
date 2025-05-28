@@ -23,13 +23,19 @@ class SaprotTokenClassificationDataset(LMDBDataset):
         super().__init__(**kwargs)
         self.tokenizer = AutoTokenizer.from_pretrained(tokenizer)
         self.max_length = max_length
+        self.is_saprot_model = 'saprot' in tokenizer.lower() if isinstance(tokenizer, str) else False
 
     def __getitem__(self, index):
         entry = json.loads(self._get(index))
         seq = entry['seq'][:self.max_length-2]
 
-        if not isinstance(self.tokenizer, EsmTokenizer):
-            seq = " ".join(seq)
+        if self.is_saprot_model:
+            processed_seq = []
+            for aa in seq:
+                processed_seq.append(aa + "#")
+            seq = processed_seq
+        
+        seq = " ".join(seq)
 
         tokens = self.tokenizer.tokenize(seq)[:self.max_length]
         seq = " ".join(tokens)
