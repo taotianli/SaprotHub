@@ -109,8 +109,6 @@ class SaprotClassificationDataset(LMDBDataset):
 
         if self.use_bias_feature:
             inputs["coords"] = coords
-        
-        if self.is_saprot_model:
-            print('inputs', inputs)
+
 
         return inputs, labels

@@ -88,7 +88,4 @@ class SaprotPairRegressionDataset(LMDBDataset):
         encoder_info_2 = self.tokenizer.batch_encode_plus(seqs_2, return_tensors='pt', padding=True)
         inputs = {"inputs_1": encoder_info_1,
                   "inputs_2": encoder_info_2}
-        if self.is_saprot_model:
-            print('seqs_1', seqs_1, encoder_info_1)
-            print('seqs_2', seqs_2, encoder_info_2)
         return inputs, labels
