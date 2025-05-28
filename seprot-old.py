@@ -1208,8 +1208,12 @@ def get_base_model(adapter_path):
       base_model = 'Rostlab/prot_bert'
     elif 'esm1b_t33_650M_UR50S' in base_model:
       base_model = 'facebook/esm1b_t33_650M_UR50S'
+    elif 'SaProt_35M' in base_model or 'saprot_35m' in base_model.lower():
+      base_model = 'westlake-repl/SaProt_35M_AF2_seqOnly'
+    elif 'SaProt_1.3B_AFDB_OMG_NCBI' in base_model or 'saprot_1.3b' in base_model.lower():
+      base_model = 'westlake-repl/SaProt_1.3B_AFDB_OMG_NCBI'
     else:
-      raise RuntimeError("Please ensure the base model is one of the following: esm2_t12_35M_UR50D, esm2_t30_150M_UR50D, esm2_t33_650M_UR50D, esmc-300m-2024-12, Protein_Encoder_35M, Protein_Encoder_650M, prot_bert")
+      raise RuntimeError("Please ensure the base model is one of the following: esm2_t12_35M_UR50D, esm2_t30_150M_UR50D, esm2_t33_650M_UR50D, esmc-300m-2024-12, Protein_Encoder_35M, Protein_Encoder_650M, prot_bert, SaProt_35M, SaProt_1.3B_SeqOnly")
   return base_model
 
 def check_training_data_type(adapter_path, data_type):
@@ -1960,42 +1964,65 @@ def generate_embeddings(protein_list, model_type, model_arg):
 
 
 def load_zeroshot_model(model_type="saprot"):
-  try:
-    zero_shot_model
-  except Exception:
-    from saprot.model.saprot.saprot_foldseek_mutation_model import SaprotFoldseekMutationModel
-    base_model = "westlake-repl/SaProt_650M_AF2"
-    config = {
-      "foldseek_path": None,
-      "config_path": base_model,
-      "load_pretrained": True,
-    }
-
-    zero_shot_model = SaprotFoldseekMutationModel(**config)
+  global zero_shot_models
+  
+  # 使用字典存储不同类型的模型
+  if 'zero_shot_models' not in globals():
+    zero_shot_models = {}
+  
+  if model_type not in zero_shot_models:
+    if model_type == "saprot":
+      from saprot.model.saprot.saprot_foldseek_mutation_model import SaprotFoldseekMutationModel
+      base_model = "westlake-repl/SaProt_650M_AF2"
+      config = {
+        "foldseek_path": None,
+        "config_path": base_model,
+        "load_pretrained": True,
+      }
+      zero_shot_model = SaprotFoldseekMutationModel(**config)
+    else:
+      # 对于序列模型，使用SequenceMutationModel
+      from saprot.model.saprot.sequence_mutation_model import SequenceMutationModel
+      zero_shot_model = SequenceMutationModel(model_type=model_type, load_pretrained=True)
+    
     device = "cuda" if torch.cuda.is_available() else "cpu"
     zero_shot_model.to(device)
+    zero_shot_models[model_type] = zero_shot_model
 
-  return zero_shot_model
+  return zero_shot_models[model_type]
 
 
 # Zero-shot prediction
-def predict_mut(sa_seq, mut_info):
-  zero_shot_model = load_zeroshot_model()
+def predict_mut(sa_seq, mut_info, model_type="saprot"):
+  zero_shot_model = load_zeroshot_model(model_type)
   score = zero_shot_model.predict_mut(sa_seq, mut_info)
   return score
 
 
 # Zero-shot prediction for single-site saturation mutagenesis
-def predict_all_mut(sa_seq):
-  zero_shot_model = load_zeroshot_model()
+def predict_all_mut(seq, model_type="saprot"):
+  zero_shot_model = load_zeroshot_model(model_type)
 
   timestamp = datetime.now().strftime("%y%m%d%H%M%S")
   output_path = OUTPUT_HOME / f'{timestamp}_prediction_output.csv'
 
   mut_dicts = []
-  aa_seq = sa_seq[0::2]
+  
+  # 根据模型类型处理输入序列
+  if model_type == "saprot":
+    # SaProt使用SA序列
+    sa_seq = seq
+    aa_seq = sa_seq[0::2]
+  else:
+    # 序列模型使用AA序列
+    aa_seq = seq
+    sa_seq = seq  # 对于序列模型，直接使用AA序列
+  
   for i in tqdm(range(len(aa_seq)), leave=False, desc=f"Predicting"):
-    mut_dict = zero_shot_model.predict_pos_mut(sa_seq, i+1)
+    if model_type == "saprot":
+      mut_dict = zero_shot_model.predict_pos_mut(sa_seq, i+1)
+    else:
+      mut_dict = zero_shot_model.predict_pos_mut(aa_seq, i+1)
     mut_dicts.append(mut_dict)
 
   mut_list = [{'mutation': key, 'score': value} for d in mut_dicts for key, value in d.items()]
@@ -3137,7 +3164,7 @@ def choose_pred_task():
   f"The Mutational Effect Prediction section utilizes the Sequence-based Zero-shot model. By analyzing the predicted mutation "
   "scores, users can quickly identify mutations that are likely to enhance specific protein functions, such as "
   "enzyme activity."
-  ), layout=Layout(width=WIDTH)),
+  ), layout=Layout(width=WIDTH))
 
   # design_pred = Button(description='Protein sequence design', layout=Layout(width='500px', height='30px'), button_style="info")
   # design_intro = HTML(markdown.markdown(
@@ -3161,12 +3188,9 @@ def choose_pred_task():
       sep_hint,
       normal_pred,
       normal_intro,
-      # sep_hint,
-      # zeroshot_pred,
-      # zeroshot_intro,
-      # sep_hint,
-      # design_pred,
-      # design_intro,
+      sep_hint,
+      zeroshot_pred,
+      zeroshot_intro,
       sep_hint,
       repr_pred,
       repr_intro,
@@ -3176,8 +3200,7 @@ def choose_pred_task():
 
   # Set click events
   normal_pred.on_click(partial(jump, next=protein_property_prediction))
-  # zeroshot_pred.on_click(partial(jump, next=start_mut_pred))
-  # design_pred.on_click(partial(jump, next=protein_sequence_design))
+  zeroshot_pred.on_click(partial(jump, next=start_mut_pred))
   repr_pred.on_click(partial(jump, next=obtain_protein_embedding))
   back_btn.on_click(partial(jump, next=train_or_pred))
 
@@ -3800,7 +3823,7 @@ def single_mut_pred():
   global refresh_module
   refresh_module = single_mut_pred
 
-  hint = HTML(markdown.markdown("# Single-site or Multi-site mutagenesis\n\n## Please upload the protein structure\n If you only have protein sequence, you could use <a href='https://alphafoldserver.com' target='blank'>AlphaFold server</a> to predict its structure and upload it here."))
+  hint = HTML(markdown.markdown("# Single-site or Multi-site mutagenesis"))
   
   # 添加模型选择
   model_hint = HTML(markdown.markdown("## Please choose the model for mutation prediction:"))
@@ -3812,20 +3835,15 @@ def single_mut_pred():
             layout=Layout(width='500px', height='30px')
           )
   
-  chain_hint = HTML(markdown.markdown("Chain (to be extracted from the structure):"))
-  input_chain = ipywidgets.Text(value="A",placeholder=f'Enter the name of chain here', layout=Layout(width='500px', height='30px'))
-  upload_hint = HTML(markdown.markdown("Upload the protein structure:"))
-  upload_items = get_upload_box()
-  
   # 序列输入相关组件
-  seq_hint = HTML(markdown.markdown("### Input the protein sequence"), layout=Layout(display="none"))
+  seq_hint = HTML(markdown.markdown("### Input the protein sequence"))
   input_seq = ipywidgets.Textarea(
       value="",
       placeholder="Enter protein amino acid sequence here, e.g. MKTVRQERLKSIVRILERSKEPVSGAQLAEELSVSRQVIVQDIAYLRSLGYNIVATPRGYVLAGG",
       description="Protein sequence:",
       disabled=False,
       style={'description_width': 'initial'},
-      layout=Layout(width='800px', height='100px', display="none")
+      layout=Layout(width='800px', height='100px')
       )
 
   upload_ok_btn = ipywidgets.Button(
@@ -3838,34 +3856,10 @@ def single_mut_pred():
       hint,
       model_hint,
       model_type_box,
-      chain_hint,
-      input_chain,
-      upload_hint,
-      *upload_items,
       seq_hint,
       input_seq,
       upload_ok_btn,
   ]
-
-  # 根据输入类型切换显示
-  def change_input_type(change):
-    input_type = change["new"]
-    if input_type == "Protein structure (.pdb/.cif file)":
-      chain_hint.layout.display = None
-      input_chain.layout.display = None
-      upload_hint.layout.display = None
-      set_upload_visibility(upload_items, "default")
-      seq_hint.layout.display = "none"
-      input_seq.layout.display = "none"
-    else:
-      chain_hint.layout.display = "none"
-      input_chain.layout.display = "none"
-      upload_hint.layout.display = "none"
-      set_upload_visibility(upload_items, "none")
-      seq_hint.layout.display = None
-      input_seq.layout.display = None
-
-
 
   # Set click events
   def on_upload_file(change):

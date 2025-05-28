@@ -14,6 +14,7 @@ from .base import SaprotBaseModel
 @register_model
 class SequenceMutationModel(SaprotBaseModel):
     def __init__(self,
+                 model_type: str = "esm2",
                  mask_seq: bool = False,
                  seq_substitute_rate: float = None,
                  MSA_log_path: str = None,
@@ -22,6 +23,8 @@ class SequenceMutationModel(SaprotBaseModel):
                  **kwargs):
         """
         Args:
+            model_type: Type of the model to use ('esm2', 'protrek', 'saprot-seq-only')
+            
             mask_seq: If True, the model will mask the sequence tokens
             
             seq_substitute_rate: If not None, the model will randomly substitute sequence tokens with this rate
@@ -34,8 +37,23 @@ class SequenceMutationModel(SaprotBaseModel):
             
             **kwargs: Other arguments for SaprotBaseModel
         """
+        self.model_type = model_type
         self.mask_seq = mask_seq
         self.seq_substitute_rate = seq_substitute_rate
+        
+        # Set config_path based on model_type
+        if model_type == "esm2":
+            config_path = "facebook/esm2_t33_650M_UR50D"
+        elif model_type == "protrek":
+            config_path = "westlake-repl/ProTrek_650M_UniRef50"
+        elif model_type == "saprot-seq-only":
+            config_path = "westlake-repl/SaProt_1.3B_AFDB_OMG_NCBI"
+        else:
+            raise ValueError(f"Unsupported model_type: {model_type}")
+        
+        # Set config_path in kwargs if not already provided
+        if 'config_path' not in kwargs:
+            kwargs['config_path'] = config_path
         
         self.MSA_log_path = MSA_log_path
         self.MSA_info_dict = {}
