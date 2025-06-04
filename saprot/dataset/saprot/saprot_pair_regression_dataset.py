@@ -27,24 +27,14 @@ class SaprotPairRegressionDataset(LMDBDataset):
         self.tokenizer = AutoTokenizer.from_pretrained(tokenizer)
         self.max_length = max_length
         self.plddt_threshold = plddt_threshold
-        self.is_saprot_model = 'saprot' in tokenizer.lower() if isinstance(tokenizer, str) else False
 
     def __getitem__(self, index):
         entry = json.loads(self._get(index))
         seq_1, seq_2 = entry['seq_1'][:self.max_length-2], entry['seq_2'][:self.max_length-2]
 
-        if self.is_saprot_model:
-            processed_seq_1 = []
-            processed_seq_2 = []
-            for aa in seq_1:
-                processed_seq_1.append(aa + "#")
-            seq_1 = processed_seq_1
-            for aa in seq_2:
-                processed_seq_2.append(aa + "#")
-            seq_2 = processed_seq_2
-
-        seq_1 = " ".join(seq_1)
-        seq_2 = " ".join(seq_2)
+        if not isinstance(self.tokenizer, EsmTokenizer):
+            seq_1 = " ".join(seq_1)
+            seq_2 = " ".join(seq_2)
 
         # Mask structure tokens with pLDDT < threshold
         if self.plddt_threshold is not None:
@@ -88,4 +78,5 @@ class SaprotPairRegressionDataset(LMDBDataset):
         encoder_info_2 = self.tokenizer.batch_encode_plus(seqs_2, return_tensors='pt', padding=True)
         inputs = {"inputs_1": encoder_info_1,
                   "inputs_2": encoder_info_2}
+
         return inputs, labels
