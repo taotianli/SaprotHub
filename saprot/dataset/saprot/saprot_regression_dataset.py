@@ -110,5 +110,27 @@ class SaprotRegressionDataset(LMDBDataset):
 		encoder_info = self.tokenizer.batch_encode_plus(seqs, return_tensors='pt', padding=True)
 		inputs = {"inputs": encoder_info}
 
+		# 添加调试信息 - 检查输入的token IDs
+		print("=" * 50)
+		print("数据集调试信息:")
+		print(f"批次大小: {len(seqs)}")
+		print(f"序列示例 (前3个): {seqs[:3]}")
+		print(f"标签: {labels['labels']}")
+		print(f"Token IDs shape: {encoder_info['input_ids'].shape}")
+		print(f"Token IDs 范围: {encoder_info['input_ids'].min().item()} - {encoder_info['input_ids'].max().item()}")
+		
+		# 检查是否有UNK token
+		if hasattr(self.tokenizer, 'unk_token_id') and self.tokenizer.unk_token_id is not None:
+			unk_count = (encoder_info['input_ids'] == self.tokenizer.unk_token_id).sum().item()
+			print(f"UNK token 数量: {unk_count}")
+		
+		# 检查词汇表大小
+		vocab_size = len(self.tokenizer.get_vocab())
+		print(f"词汇表大小: {vocab_size}")
+		
+		# 检查是否有超出词汇表范围的token
+		invalid_tokens = (encoder_info['input_ids'] >= vocab_size).sum().item()
+		print(f"超出词汇表范围的token数量: {invalid_tokens}")
+		print("=" * 50)
 		
 		return inputs, labels

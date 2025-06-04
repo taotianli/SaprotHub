@@ -64,17 +64,28 @@ class SaprotRegressionModel(SaprotBaseModel):
         fitness = labels['labels'].to(outputs)
         loss = torch.nn.functional.mse_loss(outputs, fitness)
         
-        # print("Outputs:", outputs)
-        # print("Labels:", fitness)
+        # 添加调试信息
+        print("=" * 60)
+        print(f"回归模型调试信息 - {stage} 阶段:")
+        print(f"Outputs shape: {outputs.shape}")
+        print(f"Outputs 范围: {outputs.min().item():.6f} - {outputs.max().item():.6f}")
+        print(f"Outputs 前5个值: {outputs[:5].detach().cpu().numpy()}")
+        print(f"Labels shape: {fitness.shape}")
+        print(f"Labels 范围: {fitness.min().item():.6f} - {fitness.max().item():.6f}")
+        print(f"Labels 前5个值: {fitness[:5].detach().cpu().numpy()}")
+        print(f"MSE Loss: {loss.item():.6f}")
         
-        # Update metrics
-        for metric in self.metrics[stage].values():
+        # Update metrics and print their values
+        for metric_name, metric in self.metrics[stage].items():
             # Training is on half precision, but metrics expect float to compute correctly.
             metric.set_dtype(torch.float32)
             metric.update(outputs.detach(), fitness)
-            # print(metric.update(outputs.detach(), fitness))
-            # print(metric.compute())
-
+            
+            # 计算并打印当前指标值
+            current_value = metric.compute()
+            print(f"{metric_name}: {current_value.item():.6f}")
+        
+        print("=" * 60)
             
         if stage == "train":
             log_dict = {"train_loss": loss.item()}
