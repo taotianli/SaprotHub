@@ -51,7 +51,9 @@ class SaprotPairRegressionModel(SaprotBaseModel):
     def loss_func(self, stage, logits, labels):
         fitness = labels['labels'].to(logits)
         loss = torch.nn.functional.mse_loss(logits, fitness)
-        
+        print("Logits:", logits)
+        print("Fitness:", fitness)
+        print("Loss:", loss)
 
         # Update metrics
         for metric in self.metrics[stage].values():

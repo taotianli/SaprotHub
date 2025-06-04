@@ -26,7 +26,7 @@ class SaprotTokenClassificationDataset(LMDBDataset):
 
     def __getitem__(self, index):
         entry = json.loads(self._get(index))
-        seq = entry['seq'][:self.max_length-2]
+        seq = entry['seq']
 
         if not isinstance(self.tokenizer, EsmTokenizer):
             seq = " ".join(seq)
@@ -35,8 +35,7 @@ class SaprotTokenClassificationDataset(LMDBDataset):
         seq = " ".join(tokens)
         
         # Add -1 to the start and end of the label to ignore the cls token
-        label = [-1] + entry["label"][:self.max_length-2] + [-1]
-        # print('seq and label len', len(seq), len(label))
+        label = [-1] + entry["label"][:self.max_length] + [-1]
         label = torch.tensor(label, dtype=torch.long)
         
         return seq, label

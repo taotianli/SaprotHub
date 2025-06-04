@@ -42,7 +42,7 @@ class SaprotAnnotationDataset(LMDBDataset):
     
     def __getitem__(self, index):
         data = json.loads(self._get(index))
-        seq = data['seq'][::2]
+        seq = data['seq']
         
         # Mask structure tokens
         if self.mask_struc_ratio is not None:
