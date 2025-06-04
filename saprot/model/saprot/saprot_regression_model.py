@@ -41,40 +41,24 @@ class SaprotRegressionModel(SaprotBaseModel):
                 logits = self.model.classifier.out_proj(x).squeeze(dim=-1)
 
             else:
-               logits = self.model(**inputs).logits.squeeze(dim=-1)
-        
-         # For ProtBERT
+                logits = self.model(**inputs).logits.squeeze(dim=-1)
+
+        # For ProtBERT
         elif hasattr(self.model, "bert"):
-            # 检查输入的token IDs是否在有效范围内
-            vocab_size = self.model.bert.embeddings.word_embeddings.num_embeddings
-            input_ids = inputs["input_ids"]
-            if torch.max(input_ids) >= vocab_size:
-                # 将超出范围的ID替换为UNK token ID
-                unk_id = self.tokenizer.unk_token_id if self.tokenizer.unk_token_id is not None else 0
-                inputs["input_ids"] = torch.where(input_ids < vocab_size, input_ids, torch.tensor(unk_id).to(input_ids.device))
             repr = self.model.bert(**inputs).last_hidden_state[:, 0]
             logits = self.model.classifier(repr).squeeze(dim=-1)
-
-        print("Logits & Inputs:", logits, inputs)    
 
         return logits
 
     def loss_func(self, stage, outputs, labels):
         fitness = labels['labels'].to(outputs)
         loss = torch.nn.functional.mse_loss(outputs, fitness)
-        
-        print("Outputs & Labels:", outputs, fitness)
-        
+
         # Update metrics
         for metric in self.metrics[stage].values():
             # Training is on half precision, but metrics expect float to compute correctly.
             metric.set_dtype(torch.float32)
-            # 将数据转换为float32来避免精度问题
-            outputs_float = outputs.detach().float()
-            fitness_float = fitness.float()
-            metric.update(outputs_float, fitness_float)
-            print(f"Metric {type(metric).__name__}: {metric.compute()}")
-
+            metric.update(outputs.detach(), fitness)
             
         if stage == "train":
             log_dict = {"train_loss": loss.item()}
