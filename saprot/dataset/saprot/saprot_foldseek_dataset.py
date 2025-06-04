@@ -58,10 +58,10 @@ class SaprotFoldseekDataset(LMDBDataset):
 
 	def __getitem__(self, index):
 		entry = json.loads(self._get(index))
-		seq = entry['seq']
+		seq = entry['seq'][:self.max_length-2]
 		
 		# mask sequence for training
-		tokens = self.tokenizer.tokenize(seq)[:self.max_length]
+		tokens = self.tokenizer.tokenize(seq)[:self.max_length-2]
 
 		while True:
 			masked_tokens, labels = self._apply_bert_mask(tokens)

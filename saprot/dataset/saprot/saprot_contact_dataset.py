@@ -28,7 +28,7 @@ class SaprotContactDataset(LMDBDataset):
     def __getitem__(self, index):
         entry = json.loads(self._get(index))
 
-        seq = entry['seq']
+        seq = entry['seq'][:self.max_length]
         tokens = self.tokenizer.tokenize(seq)[:self.max_length]
         seq = " ".join(tokens)
 
