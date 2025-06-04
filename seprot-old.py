@@ -3159,12 +3159,13 @@ def choose_pred_task():
     "available in <a href='https://huggingface.co/SeprotHub' target='blank'>SeprotHub</a> or their previously trained models for predictions. The model input for "
     "predicting should be consistent with its training format."), layout=Layout(width=WIDTH))
 
-  zeroshot_pred = Button(description='Mutational effect prediction', layout=Layout(width='500px', height='30px'), button_style="info")
-  zeroshot_intro = HTML(markdown.markdown(
-  f"The Mutational Effect Prediction section utilizes the Sequence-based Zero-shot model. By analyzing the predicted mutation "
-  "scores, users can quickly identify mutations that are likely to enhance specific protein functions, such as "
-  "enzyme activity."
-  ), layout=Layout(width=WIDTH))
+  # 注释掉mutation相关的按钮
+  # zeroshot_pred = Button(description='Mutational effect prediction', layout=Layout(width='500px', height='30px'), button_style="info")
+  # zeroshot_intro = HTML(markdown.markdown(
+  # f"The Mutational Effect Prediction section utilizes the Sequence-based Zero-shot model. By analyzing the predicted mutation "
+  # "scores, users can quickly identify mutations that are likely to enhance specific protein functions, such as "
+  # "enzyme activity."
+  # ), layout=Layout(width=WIDTH))
 
   # design_pred = Button(description='Protein sequence design', layout=Layout(width='500px', height='30px'), button_style="info")
   # design_intro = HTML(markdown.markdown(
@@ -3189,9 +3190,10 @@ def choose_pred_task():
       normal_pred,
       normal_intro,
       sep_hint,
-      zeroshot_pred,
-      zeroshot_intro,
-      sep_hint,
+      # 注释掉mutation相关的条目
+      # zeroshot_pred,
+      # zeroshot_intro,
+      # sep_hint,
       repr_pred,
       repr_intro,
       sep_hint,
@@ -3200,7 +3202,8 @@ def choose_pred_task():
 
   # Set click events
   normal_pred.on_click(partial(jump, next=protein_property_prediction))
-  zeroshot_pred.on_click(partial(jump, next=start_mut_pred))
+  # 注释掉mutation相关的点击事件
+  # zeroshot_pred.on_click(partial(jump, next=start_mut_pred))
   repr_pred.on_click(partial(jump, next=obtain_protein_embedding))
   back_btn.on_click(partial(jump, next=train_or_pred))
 

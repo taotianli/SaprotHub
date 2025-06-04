@@ -51,13 +51,8 @@ class SaprotRegressionDataset(LMDBDataset):
 		entry = json.loads(self._get(index))
 		seq = entry['seq'][:self.max_length-2]
 		
-		if self.is_saprot_model:
-			processed_seq = []
-			for aa in seq:
-				processed_seq.append(aa + "#")
-			seq = processed_seq
-		
-		seq = " ".join(seq)
+		if not isinstance(self.tokenizer, EsmTokenizer):
+			seq = " ".join(seq)
 			
 		# Mask structure tokens
 		if self.mask_struc_ratio is not None:
