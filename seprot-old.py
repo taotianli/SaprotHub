@@ -3,6 +3,7 @@
 #@markdown ### Hint:
 #@markdown - It takes 3-8 minutes for the initial installation.
 #@markdown - The run-button's "inactive" state (<img src='https://github.com/westlake-repl/SaProtHub/blob/dev/Figure/run_button.png?raw=true' height='25px' width='25px' align='center'>) indicates the program is on standby and awaits your click to start. When clicked, the run-button transforms to show a dynamic loading animation (<img src='https://github.com/westlake-repl/SaProtHub/blob/dev/Figure/run_button_working.png?raw=true' height='25px' width='25px' align='center'>), confirming the program is launching. Once the interface loads completely, you can begin using the program.
+
 #@markdown ### <font color=red> Important: </font>
 #@markdown - <font color=red>If changing runtime type or encountering connection issues, first click the run-button to stop the program. Once the run-button transforms from (<img src='https://github.com/westlake-repl/SaProtHub/blob/dev/Figure/run_button_working.png?raw=true' height='25px' width='25px' align='center'>) to (<img src='https://github.com/westlake-repl/SaProtHub/blob/dev/Figure/run_button.png?raw=true' height='25px' width='25px' align='center'>), you can reconnect and restart, see [here](https://github.com/westlake-repl/SaprotHub/wiki/SaprotHub-v2-(latest)#2-how-can-i-reconnect-when-encountering-connection-issues).</font>
 #@markdown - <font color=red>For any unknown issues, clear your session via Runtime > "Manage Sessions", see [here](https://github.com/westlake-repl/SaprotHub/wiki/SaprotHub-v2-(latest)#a-simple-way-to-handle-unexpected-issues).</font>
@@ -15,14 +16,84 @@
 import os
 # Check whether the server is local or from google cloudA model id example
 root_dir = os.getcwd()
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
 
 from google.colab import output
 # output.enable_custom_widget_manager()
 
 try:
   import sys
+  import subprocess
   sys.path.append(f"{root_dir}/SaprotHub")
   import saprot
+
+  try:
+      result = subprocess.run(
+          [sys.executable, "-m", "pip", "show", "saprot"],
+          capture_output=True,
+          text=True
+      )
+
+      is_fork_installed = "Tianli" in result.stdout
+
+      if not is_fork_installed:
+          print('Reinstalling Seprot...')
+          os.system(f"rm -rf {root_dir}/SaprotHub")
+          # !rm -rf /content/SaprotHub/
+
+          os.system("git clone https://github.com/taotianli/SaprotHub.git > /dev/null 2>&1")
+
+          # !pip install /content/SaprotHub/saprot-0.4.7-py3-none-any.whl
+          os.system(f"pip install -r {root_dir}/SaprotHub/requirements.txt")
+          # !pip install -r /content/SaprotHub/requirements.txt
+
+          os.system(f"pip install {root_dir}/SaprotHub")
+
+
+          os.system(f"mkdir -p {root_dir}/SaprotHub/LMDB")
+          os.system(f"mkdir -p {root_dir}/SaprotHub/bin")
+          os.system(f"mkdir -p {root_dir}/SaprotHub/output")
+          os.system(f"mkdir -p {root_dir}/SaprotHub/datasets")
+          os.system(f"mkdir -p {root_dir}/SaprotHub/adapters/classification/Local")
+          os.system(f"mkdir -p {root_dir}/SaprotHub/adapters/regression/Local")
+          os.system(f"mkdir -p {root_dir}/SaprotHub/adapters/token_classification/Local")
+          os.system(f"mkdir -p {root_dir}/SaprotHub/adapters/pair_classification/Local")
+          os.system(f"mkdir -p {root_dir}/SaprotHub/adapters/pair_regression/Local")
+          os.system(f"mkdir -p {root_dir}/SaprotHub/structures")
+
+          os.system("pip install jupyter_ui_poll")
+          os.system("pip uninstall -y torchao")
+          print(f"Seprot is installed successfully!")
+      else:
+          print(f"Seprot is installed successfully!")
+  except Exception as e:
+      os.system(f"rm -rf {root_dir}/SaprotHub")
+      # !rm -rf /content/SaprotHub/
+
+      os.system("git clone https://github.com/taotianli/SaprotHub.git > /dev/null 2>&1")
+
+      # !pip install /content/SaprotHub/saprot-0.4.7-py3-none-any.whl
+      os.system(f"pip install -r {root_dir}/SaprotHub/requirements.txt")
+      # !pip install -r /content/SaprotHub/requirements.txt
+
+      os.system(f"pip install {root_dir}/SaprotHub")
+
+
+      os.system(f"mkdir -p {root_dir}/SaprotHub/LMDB")
+      os.system(f"mkdir -p {root_dir}/SaprotHub/bin")
+      os.system(f"mkdir -p {root_dir}/SaprotHub/output")
+      os.system(f"mkdir -p {root_dir}/SaprotHub/datasets")
+      os.system(f"mkdir -p {root_dir}/SaprotHub/adapters/classification/Local")
+      os.system(f"mkdir -p {root_dir}/SaprotHub/adapters/regression/Local")
+      os.system(f"mkdir -p {root_dir}/SaprotHub/adapters/token_classification/Local")
+      os.system(f"mkdir -p {root_dir}/SaprotHub/adapters/pair_classification/Local")
+      os.system(f"mkdir -p {root_dir}/SaprotHub/adapters/pair_regression/Local")
+      os.system(f"mkdir -p {root_dir}/SaprotHub/structures")
+
+      os.system("pip install jupyter_ui_poll")
+      os.system("pip uninstall -y torchao")
+      print(f"Seprot is installed successfully!")
 
   os.system(f"chmod +x {root_dir}/SaprotHub/bin/*")
 
@@ -65,7 +136,7 @@ try:
   from pathlib import Path
   from tqdm import tqdm
   from datetime import datetime
-  from transformers import AutoTokenizer, EsmForProteinFolding, EsmTokenizer
+  from transformers import AutoTokenizer, EsmForProteinFolding
   from transformers.models.esm.openfold_utils.protein import to_pdb, Protein as OFProtein
   from transformers.models.esm.openfold_utils.feats import atom14_to_atom37
   from string import ascii_uppercase,ascii_lowercase
@@ -74,14 +145,27 @@ try:
   from saprot.scripts.training import my_load_model
   from safetensors import safe_open
 
-  print("SaProt is installed successfully!")
+  os.system(f"mkdir -p {root_dir}/SaprotHub/LMDB")
+  os.system(f"mkdir -p {root_dir}/SaprotHub/bin")
+  os.system(f"mkdir -p {root_dir}/SaprotHub/output")
+  os.system(f"mkdir -p {root_dir}/SaprotHub/datasets")
+  os.system(f"mkdir -p {root_dir}/SaprotHub/adapters/classification/Local")
+  os.system(f"mkdir -p {root_dir}/SaprotHub/adapters/regression/Local")
+  os.system(f"mkdir -p {root_dir}/SaprotHub/adapters/token_classification/Local")
+  os.system(f"mkdir -p {root_dir}/SaprotHub/adapters/pair_classification/Local")
+  os.system(f"mkdir -p {root_dir}/SaprotHub/adapters/pair_regression/Local")
+  os.system(f"mkdir -p {root_dir}/SaprotHub/structures")
+  os.system("pip install jupyter_ui_poll")
+  os.system("pip uninstall -y torchao")
 
-except Exception:
-  print("Installing SaProt...")
+  print("Seprot is installed successfully!")
+
+except ImportError:
+  print("Installing SeProt...")
   os.system(f"rm -rf {root_dir}/SaprotHub")
   # !rm -rf /content/SaprotHub/
 
-  !git clone https://github.com/westlake-repl/SaprotHub.git
+  os.system("git clone https://github.com/taotianli/SaprotHub.git > /dev/null 2>&1")
 
   # !pip install /content/SaprotHub/saprot-0.4.7-py3-none-any.whl
   os.system(f"pip install -r {root_dir}/SaprotHub/requirements.txt")
@@ -102,7 +186,7 @@ except Exception:
   os.system(f"mkdir -p {root_dir}/SaprotHub/structures")
 
   os.system("pip install jupyter_ui_poll")
-  # os.system("pip install numpy==1.26.4")
+  os.system("pip uninstall -y torchao")
 
   # !mkdir -p /content/SaprotHub/LMDB
   # !mkdir -p /content/SaprotHub/bin
@@ -125,6 +209,8 @@ except Exception:
   import sys
   sys.path.append(f"{root_dir}/SaprotHub")
 
+  # !mv /content/SaprotHub/ColabSaprotSetup/foldseek /content/SaprotHub/bin/
+
   # IMPORTANT!!!! Used to fix the error caused by the mismatch of the versions of third-party libraries!!
   import matplotlib.pyplot as plt
   fig, ax = plt.subplots(figsize=(0.01,0.01))
@@ -135,11 +221,13 @@ except Exception:
   plt.tick_params(axis='y',colors='white')
   plt.show()
 
+
 ################################################################################
 ################################################################################
 ################################## global ######################################
 ################################################################################
 ################################################################################
+
 # IMPORTANT!!!! Used to fix the error caused by the mismatch of the versions of third-party libraries!!
 import sys
 keys=[]
@@ -150,7 +238,7 @@ for k in sys.modules.keys():
 for k in keys:
   del sys.modules[k]
 
-from transformers import AutoTokenizer, EsmForProteinFolding, EsmTokenizer
+from transformers import AutoTokenizer, EsmForProteinFolding
 from transformers.models.esm.openfold_utils.protein import to_pdb, Protein as OFProtein
 from transformers.models.esm.openfold_utils.feats import atom14_to_atom37
 import numpy as np
@@ -172,6 +260,7 @@ import matplotlib.pyplot as plt
 import shutil
 import torch.nn.functional as F
 import warnings
+import threading
 warnings.filterwarnings("ignore", category=FutureWarning)
 
 from loguru import logger
@@ -186,7 +275,9 @@ from google.colab import files
 from pathlib import Path
 from tqdm import tqdm
 from datetime import datetime
-
+from transformers import AutoTokenizer, EsmForProteinFolding, EsmTokenizer
+from transformers.models.esm.openfold_utils.protein import to_pdb, Protein as OFProtein
+from transformers.models.esm.openfold_utils.feats import atom14_to_atom37
 from string import ascii_uppercase,ascii_lowercase
 from saprot.utils.mpr import MultipleProcessRunnerSimplifier
 from saprot.data.parse import get_chain_ids
@@ -315,7 +406,7 @@ def get_adapters_list(task_type=None):
 def adapters_text(adapters_list):
   input = ipywidgets.Text(
     value=None,
-    placeholder='Enter SaprotHub Model ID',
+    placeholder='Enter SeprotHub Model ID',
     # description='Selected:',
     disabled=False)
   input.layout.width = '500px'
@@ -364,7 +455,7 @@ def adapters_selectmultiple(adapters_list):
 def adapters_textmultiple(adapters_list):
   textmultiple = ipywidgets.Text(
   value=None,
-  placeholder='Enter multiple SaprotHub Model IDs, separated by commas.',
+  placeholder='Enter multiple SeprotHub Model IDs, separated by commas.',
   # description='Fruits',
   disabled=False,
   layout={'width': '500px'})
@@ -376,11 +467,11 @@ def adapters_textmultiple(adapters_list):
 def select_adapter_from(task_type, use_model_from):
   adapters_list = get_adapters_list(task_type)
 
-  if use_model_from == 'Trained by yourself on ColabSaprot':
+  if use_model_from == 'Trained by yourself on ColabSeprot':
     return adapters_dropdown(adapters_list)
 
-  elif use_model_from == 'Shared by peers on SaprotHub':
-    print(Fore.BLUE+"SaprotHub Model:"+Style.RESET_ALL)
+  elif use_model_from == 'Shared by peers on SeprotHub':
+    print(Fore.BLUE+"SeprotHub Model:"+Style.RESET_ALL)
     return adapters_text(adapters_list)
 
   elif use_model_from == "Saved in your local computer":
@@ -407,15 +498,15 @@ def select_adapter_from(task_type, use_model_from):
 
     return EasyDict({"value":  f"Local/{adapter_zip_path.stem}"})
 
-  elif use_model_from == "Multi-models on ColabSaprot":
+  elif use_model_from == "Multi-models on ColabSeprot":
     # 1. select the list of adapters
     print(Fore.BLUE+f"Local Model ({task_type}):"+Style.RESET_ALL)
     print(Fore.BLUE+f"Multiple values can be selected with \"shift\" and/or \"ctrl\" (or \"command\") pressed and mouse clicks or arrow keys."+Style.RESET_ALL)
     return adapters_selectmultiple(adapters_list)
 
-  elif use_model_from == "Multi-models on SaprotHub":
+  elif use_model_from == "Multi-models on SeprotHub":
     # 1. enter the list of adapters
-    print(Fore.BLUE+f"SaprotHub Model IDs, separated by commas ({task_type}):"+Style.RESET_ALL)
+    print(Fore.BLUE+f"SeprotHub Model IDs, separated by commas ({task_type}):"+Style.RESET_ALL)
     return adapters_textmultiple(adapters_list)
 
 
@@ -477,15 +568,28 @@ def upload_file(upload_path):
 ################################################################################
 
 def read_csv_dataset(uploaded_csv_path):
-  df = pd.read_csv(uploaded_csv_path)
-  df.columns = df.columns.str.lower()
-  return df
+    df = pd.read_csv(uploaded_csv_path)
+    df.columns = [col.lower() if isinstance(col, str) else col for col in df.columns]
+    return df
 
 def check_column_label_and_stage(csv_dataset_path):
-  df = read_csv_dataset(csv_dataset_path)
-  assert {'label', 'stage'}.issubset(df.columns), f"Make sure your CSV dataset includes both `label` and `stage` columns!\nCurrent columns: {df.columns}"
-  column_values = set(df['stage'].unique())
-  assert all(value in column_values for value in ['train', 'valid', 'test']), f"Ensure your dataset includes samples for all three stages: `train`, `valid` and `test`.\nCurrent columns: {df.columns}"
+    df = read_csv_dataset(csv_dataset_path)
+    for column in df.columns:
+        if 'sequence' in column:
+            df[column] = df[column].fillna('')
+            df[column] = df[column].apply(lambda x: ''.join([c for c in x if not (c.islower() or c == '#')]))
+            df[column] = df[column].apply(lambda x: x[:1024] if len(x) > 1024 else x)
+
+            assert {'label', 'stage'}.issubset(df.columns), \
+                f"Make sure your CSV dataset includes both `label` and `stage` columns!\nCurrent columns: {df.columns}"
+            column_values = set(df['stage'].unique())
+            assert all(value in column_values for value in ['train', 'valid', 'test']), \
+                f"Ensure your dataset includes samples for all three stages: `train`, `valid` and `test`.\nCurrent columns: {df.columns}"
+
+            output_file = os.path.join(os.path.dirname(csv_dataset_path), 'cleaned_dataset.csv')
+            df.to_csv(output_file, index=False)
+            return output_file
+
 
 def get_data_type(csv_dataset_path):
   # AA, SA, Pair AA, Pair SA
@@ -1088,12 +1192,28 @@ def get_base_model(adapter_path):
   with open(adapter_config, 'r') as f:
     adapter_config_dict = json.load(f)
     base_model = adapter_config_dict['base_model_name_or_path']
-    if 'SaProt_650M_AF2' in base_model:
-      base_model = "westlake-repl/SaProt_650M_AF2"
-    elif 'SaProt_35M_AF2' in base_model:
-      base_model = "westlake-repl/SaProt_35M_AF2"
+    if 'esm2_t12_35M_UR50D' in base_model:
+      base_model = "facebook/esm2_t12_35M_UR50D"
+    elif 'esm2_t30_150M_UR50D' in base_model:
+      base_model = "facebook/esm2_t30_150M_UR50D"
+    elif 'esm2_t33_650M_UR50D' in base_model:
+      base_model = "facebook/esm2_t33_650M_UR50D"
+    elif 'esmc-300m-2024-12' in base_model:
+      base_model = 'EvolutionaryScale/esmc-300m-2024-12'
+    elif 'Protein_Encoder_35M' in base_model:
+      base_model = 'ProTrekHub/Protein_Encoder_35M'
+    elif 'Protein_Encoder_650M' in base_model:
+      base_model = 'ProTrekHub/Protein_Encoder_650M'
+    elif 'prot_bert' in base_model:
+      base_model = 'Rostlab/prot_bert'
+    elif 'esm1b_t33_650M_UR50S' in base_model:
+      base_model = 'facebook/esm1b_t33_650M_UR50S'
+    elif 'SaProt_35M' in base_model or 'saprot_35m' in base_model.lower():
+      base_model = 'westlake-repl/SaProt_35M_AF2_seqOnly'
+    elif 'SaProt_1.3B_AFDB_OMG_NCBI' in base_model or 'saprot_1.3b' in base_model.lower():
+      base_model = 'westlake-repl/SaProt_1.3B_AFDB_OMG_NCBI'
     else:
-      raise RuntimeError("Please ensure the base model is \"SaProt_650M_AF2\" or \"SaProt_35M_AF2\"")
+      raise RuntimeError("Please ensure the base model is one of the following: esm2_t12_35M_UR50D, esm2_t30_150M_UR50D, esm2_t33_650M_UR50D, esmc-300m-2024-12, Protein_Encoder_35M, Protein_Encoder_650M, prot_bert, SaProt_35M, SaProt_1.3B_SeqOnly")
   return base_model
 
 def check_training_data_type(adapter_path, data_type):
@@ -1508,7 +1628,7 @@ def make_predictions(df, rows, num_labels, model_type, model_arg):
   original_task_type = task_type
   task_type = task_type_dict[task_type]
 
-  if model_type == "Multi-models on SaprotHub":
+  if model_type == "Multi-models on SeprotHub":
     #1. get adapter_list
     repo_id_list = [repo_id.strip() for repo_id in model_arg.strip().split("\n")]
     #2. download adapters
@@ -1526,7 +1646,7 @@ def make_predictions(df, rows, num_labels, model_type, model_arg):
     })
 
   else:
-    if model_type == "Shared by peers on SaprotHub":
+    if model_type == "Shared by peers on SeprotHub":
       snapshot_download(repo_id=model_arg, repo_type="model", local_dir=ADAPTER_HOME / model_arg)
 
     adapter_path = ADAPTER_HOME / model_arg
@@ -1553,15 +1673,37 @@ def make_predictions(df, rows, num_labels, model_type, model_arg):
 
   # Load model
   model = my_load_model(config.model)
-  tokenizer = EsmTokenizer.from_pretrained(config.model.kwargs.config_path)
+  tokenizer = AutoTokenizer.from_pretrained(config.model.kwargs.config_path)
   device = "cuda" if torch.cuda.is_available() else "cpu"
   model.to(device)
 
   # Start prediction
   logits = []
   pred_labels = []
+  
+  is_saprot_seq_only = False
+  if "saprot" in base_model.lower():
+    is_saprot_seq_only = True
+  
   if task_type in ["pair_classification", "pair_regression"]:
     for sa_seq_1, sa_seq_2 in tqdm(rows):
+      sa_seq_1 = sa_seq_1[:1022]
+      sa_seq_2 = sa_seq_2[:1022]
+    
+      if is_saprot_seq_only:
+        processed_seq_1 = []
+        for aa in sa_seq_1:
+          processed_seq_1.append(aa + "#")
+        sa_seq_1 = "".join(processed_seq_1)
+        
+        processed_seq_2 = []
+        for aa in sa_seq_2:
+          processed_seq_2.append(aa + "#")
+        sa_seq_2 = "".join(processed_seq_2)
+      
+      if not isinstance(tokenizer, EsmTokenizer):
+        sa_seq_1 = " ".join(sa_seq_1)
+        sa_seq_2 = " ".join(sa_seq_2)
       input_1 = tokenizer(sa_seq_1, return_tensors="pt")
       input_1 = {k: v.to(device) for k, v in input_1.items()}
       input_2 = tokenizer(sa_seq_2, return_tensors="pt")
@@ -1578,8 +1720,20 @@ def make_predictions(df, rows, num_labels, model_type, model_arg):
 
   else:
     for sa_seq in tqdm(rows):
+      sa_seq = sa_seq[:1022]
+      
+      if is_saprot_seq_only:
+        processed_seq = []
+        for aa in sa_seq:
+          processed_seq.append(aa + "#")
+        sa_seq = "".join(processed_seq)
+      
+      if not isinstance(tokenizer, EsmTokenizer):
+        sa_seq = " ".join(sa_seq)
+
       inputs = tokenizer(sa_seq, return_tensors="pt")
       inputs = {k: v.to(device) for k, v in inputs.items()}
+      # print("Inputs:", inputs)
       with torch.no_grad():
         pred = model(inputs)
 
@@ -1605,16 +1759,13 @@ def make_predictions(df, rows, num_labels, model_type, model_arg):
 
 # Get data type that is compatible with the model
 def load_data_type_from_model(model_type, model_arg):
-  if model_type == "Official SaProt (35M)":
-    return "SA"
-
-  elif model_type == "Official SaProt (650M)":
-    return "SA"
+  if 'Official' in model_type:
+    return "AA"
 
   else:
     adapter_path = ADAPTER_HOME / model_arg
 
-    if model_type == "Shared by peers on SaprotHub":
+    if model_type == "Shared by peers on SeprotHub":
       snapshot_download(repo_id=model_arg, repo_type="model", local_dir=adapter_path)
 
     metadata_path = Path(adapter_path) / "metadata.json"
@@ -1628,7 +1779,7 @@ def load_task_type_from_model(model_type, model_arg):
   try:
     adapter_path = ADAPTER_HOME / model_arg
 
-    if model_type == "Shared by peers on SaprotHub" or model_type == "Multi-models on SaprotHub":
+    if model_type == "Shared by peers on SeprotHub" or model_type == "Multi-models on SeprotHub":
       snapshot_download(repo_id=model_arg, repo_type="model", local_dir=adapter_path)
 
     metadata_path = Path(adapter_path) / "metadata.json"
@@ -1677,18 +1828,50 @@ def generate_download_btn(path: str):
 
 
 def load_embedding_generation_model(model_type, model_arg):
-  if model_type == "Official SaProt (35M)":
-    base_model = "westlake-repl/SaProt_35M_AF2"
+  if model_type == "Official ESM2 (35M)":
+    base_model = "facebook/esm2_t12_35M_UR50D"
     lora_kwargs = None
 
-  elif model_type == "Official SaProt (650M)":
-    base_model = "westlake-repl/SaProt_650M_AF2"
+  elif model_type == "Official ESM2 (150M)":
+    base_model = "facebook/esm2_t30_150M_UR50D"
+    lora_kwargs = None
+
+  elif model_type == "Official ESM2 (650M)":
+    base_model = "facebook/esm2_t33_650M_UR50D"
+    lora_kwargs = None
+
+  elif model_type == "Official ESMC (300M)":
+    base_model = "EvolutionaryScale/esmc-300m-2024-12"
+    lora_kwargs = None
+
+  elif model_type == "Official ProTrek (35M)":
+    base_model = "ProTrekHub/Protein_Encoder_35M"
+    lora_kwargs = None
+
+  elif model_type == "Official ProTrek (650M)":
+    base_model = "ProTrekHub/Protein_Encoder_650M"
+    lora_kwargs = None
+
+  elif model_type == "Official ProtBert (420M)":
+    base_model = "Rostlab/prot_bert"
+    lora_kwargs = None
+
+  elif model_type == "Official ESM1b (650M)":
+    base_model = "facebook/esm1b_t33_650M_UR50S"
+    lora_kwargs = None
+
+  elif model_type == "Official SaProt_SeqOnly (1.3B)":
+    base_model = "westlake-repl/SaProt_1.3B_AFDB_OMG_NCBI"
+    lora_kwargs = None
+
+  elif model_type == "Official SaProt_AF2 (35M)":
+    base_model = "westlake-repl/SaProt_35M_AF2_seqOnly"
     lora_kwargs = None
 
   else:
     adapter_path = ADAPTER_HOME / model_arg
 
-    if model_type == "Shared by peers on SaprotHub":
+    if model_type == "Shared by peers on SeprotHub":
       snapshot_download(repo_id=model_arg, repo_type="model", local_dir=adapter_path)
 
     base_model = get_base_model(adapter_path)
@@ -1701,7 +1884,7 @@ def load_embedding_generation_model(model_type, model_arg):
   from saprot.config.config_dict import Default_config
   config = copy.deepcopy(Default_config)
 
-  if model_type in ["Official SaProt (35M)", "Official SaProt (650M)"]:
+  if model_type in ["Official ESM2 (35M)", "Official ESM2 (150M)", "Official ESM2 (650M)", "Official ESMC (300M)", "Official ProTrek (35M)", "Official ProTrek (650M)", "Official ProtBert (420M)", "Official ESM1b (650M)", "Official SaProt_AF2 (35M)", "Official SaProt_SeqOnly (1.3B)"]:
     num_labels, task_type = 1, 'classification'
   else:
     num_labels, task_type = get_num_labels_and_task_type_by_adapter(lora_kwargs["config_list"][0]["lora_config_path"])
@@ -1714,7 +1897,7 @@ def load_embedding_generation_model(model_type, model_arg):
   config.model.kwargs.lora_kwargs = lora_kwargs
 
   model = my_load_model(config.model)
-  tokenizer = EsmTokenizer.from_pretrained(config.model.kwargs.config_path)
+  tokenizer = AutoTokenizer.from_pretrained(config.model.kwargs.config_path)
   device = "cuda" if torch.cuda.is_available() else "cpu"
   model.to(device)
 
@@ -1743,7 +1926,7 @@ def generate_embeddings(protein_list, model_type, model_arg):
     outputs = []
     for record in SeqIO.parse(protein_list, "fasta"):
       aa_seq = str(record.seq)
-      sa_seq = "".join(aa + "#" for aa in aa_seq)
+      sa_seq = "".join(aa + "" for aa in aa_seq)
       outputs.append(f"{record.id}\t{sa_seq}\n")
 
   model = load_embedding_generation_model(model_type, model_arg)
@@ -1753,12 +1936,21 @@ def generate_embeddings(protein_list, model_type, model_arg):
 
   embedding_list = []
   name_list = []
+  save_json_path = OUTPUT_HOME / "embeddings.json"
   with torch.no_grad(), open(save_name_path, "w") as w:
     for line in tqdm(outputs):
       name, sa_seq = line.strip().split("\t")
       w.write(f">{name}\n{sa_seq}\n")
+
       embedding = model.get_hidden_states_from_seqs([sa_seq], reduction='mean')
       embedding_list.append(embedding[0])
+      embedding_dim = embedding[0].shape[0]
+      embedding_info = {
+        "embedding_dim": embedding_dim,
+        "embeding": embedding[0].tolist()
+      }
+      with open(save_json_path, 'w', encoding='utf-8') as f:
+          json.dump(embedding_info, f, ensure_ascii=False)
       name_list.append(name)
 
   embeddings = torch.stack(embedding_list)
@@ -1766,48 +1958,71 @@ def generate_embeddings(protein_list, model_type, model_arg):
 
   # Compress the fasta and embedding file into a .zip file
   zip_path = OUTPUT_HOME / "generated_embedding.zip"
-  !cd $OUTPUT_HOME && zip -r $zip_path "embedding_seqs.fasta" "embeddings.pt"
+  os.system(f"cd {OUTPUT_HOME} && zip -r {zip_path} \"embedding_seqs.fasta\" \"embeddings.pt\"")
 
   return zip_path
 
 
-def load_zeroshot_model():
-  try:
-    zero_shot_model
-  except Exception:
-    from saprot.model.saprot.saprot_foldseek_mutation_model import SaprotFoldseekMutationModel
-    base_model = "westlake-repl/SaProt_650M_AF2"
-    config = {
-      "foldseek_path": None,
-      "config_path": base_model,
-      "load_pretrained": True,
-    }
-
-    zero_shot_model = SaprotFoldseekMutationModel(**config)
+def load_zeroshot_model(model_type="saprot"):
+  global zero_shot_models
+  
+  # 使用字典存储不同类型的模型
+  if 'zero_shot_models' not in globals():
+    zero_shot_models = {}
+  
+  if model_type not in zero_shot_models:
+    if model_type == "saprot":
+      from saprot.model.saprot.saprot_foldseek_mutation_model import SaprotFoldseekMutationModel
+      base_model = "westlake-repl/SaProt_650M_AF2"
+      config = {
+        "foldseek_path": None,
+        "config_path": base_model,
+        "load_pretrained": True,
+      }
+      zero_shot_model = SaprotFoldseekMutationModel(**config)
+    else:
+      # 对于序列模型，使用SequenceMutationModel
+      from saprot.model.saprot.sequence_mutation_model import SequenceMutationModel
+      zero_shot_model = SequenceMutationModel(model_type=model_type, load_pretrained=True)
+    
     device = "cuda" if torch.cuda.is_available() else "cpu"
     zero_shot_model.to(device)
+    zero_shot_models[model_type] = zero_shot_model
 
-  return zero_shot_model
+  return zero_shot_models[model_type]
 
 
 # Zero-shot prediction
-def predict_mut(sa_seq, mut_info):
-  zero_shot_model = load_zeroshot_model()
+def predict_mut(sa_seq, mut_info, model_type="saprot"):
+  zero_shot_model = load_zeroshot_model(model_type)
   score = zero_shot_model.predict_mut(sa_seq, mut_info)
   return score
 
 
 # Zero-shot prediction for single-site saturation mutagenesis
-def predict_all_mut(sa_seq):
-  zero_shot_model = load_zeroshot_model()
+def predict_all_mut(seq, model_type="saprot"):
+  zero_shot_model = load_zeroshot_model(model_type)
 
   timestamp = datetime.now().strftime("%y%m%d%H%M%S")
   output_path = OUTPUT_HOME / f'{timestamp}_prediction_output.csv'
 
   mut_dicts = []
-  aa_seq = sa_seq[0::2]
+  
+  # 根据模型类型处理输入序列
+  if model_type == "saprot":
+    # SaProt使用SA序列
+    sa_seq = seq
+    aa_seq = sa_seq[0::2]
+  else:
+    # 序列模型使用AA序列
+    aa_seq = seq
+    sa_seq = seq  # 对于序列模型，直接使用AA序列
+  
   for i in tqdm(range(len(aa_seq)), leave=False, desc=f"Predicting"):
-    mut_dict = zero_shot_model.predict_pos_mut(sa_seq, i+1)
+    if model_type == "saprot":
+      mut_dict = zero_shot_model.predict_pos_mut(sa_seq, i+1)
+    else:
+      mut_dict = zero_shot_model.predict_pos_mut(aa_seq, i+1)
     mut_dicts.append(mut_dict)
 
   mut_list = [{'mutation': key, 'score': value} for d in mut_dicts for key, value in d.items()]
@@ -1877,7 +2092,7 @@ def train_or_pred():
   global refresh_module
   refresh_module = train_or_pred
 
-  question = HTML(markdown.markdown("## Please choose what you want to do with ColabSaprot"))
+  question = HTML(markdown.markdown("## Please choose what you want to do with ColabSeprot"))
   option_intro = HTML(markdown.markdown(
     "<a href='https://github.com/westlake-repl/SaprotHub/wiki/SaprotHub-v2-(latest)#introduction-of-options' target='blank'>Introduction of these options</a>"
     ))
@@ -1956,8 +2171,8 @@ def choose_training_task():
 
   model_hint = HTML(markdown.markdown("### Model setting:"))
   model_type = ipywidgets.Dropdown(
-            options=['Official SaProt (35M)', "Official SaProt (650M)", "Trained by yourself on ColabSaprot", "Shared by peers on SaprotHub", "Saved in your local computer"],
-            value='Official SaProt (35M)',
+            options=["Official ProTrek (35M)", "Official ProTrek (650M)", 'Official ESM2 (35M)', 'Official ESM2 (150M)', 'Official ESM2 (650M)', 'Official ESM1b (650M)','Official ProtBert (420M)', "Official SaProt_AF2 (35M)", "Official SaProt_SeqOnly (1.3B)", "Trained by yourself on ColabSeprot", "Shared by peers on SeprotHub", "Saved in your local computer"],
+            value='Official ProTrek (35M)',
             description='Base model:',
             disabled=False,
             layout=Layout(width=WIDTH, height=HEIGHT)
@@ -1973,21 +2188,22 @@ def choose_training_task():
       ), layout=Layout(display="none"))
 
   saprothub_link = HTML(markdown.markdown(
-      "<font color=red>You could search models using our <a href='https://huggingface.co/spaces/SaProtHub/SaprotHub-search' target='blank'>search engine</a> or from <a href='https://huggingface.co/SaProtHub' target='blank'>SaprotHub</a>\n\n"
-      "A model id example: <a href='https://huggingface.co/SaProtHub/Model-Binary_Localization-650M' target='blank'>SaProtHub/Model-Binary_Localization-650M</a></font>"
+      "<font color=red>You could search models from <a href='https://huggingface.co/SeprotHub' target='blank'>SeprotHub</a>\n\n"
+      "A model id example: <a href='https://huggingface.co/SeprotHub/Model-Classification-ProTrek-35M' target='blank'>SeprotHub/Model-Classification-ProTrek-35M</a></font>"
       ), layout=Layout(display="none"))
 
   dataset_hint = HTML(markdown.markdown("### Dataset setting:"))
   data_type_hint = HTML(markdown.markdown("**Your training data type:**"))
   data_type = ipywidgets.RadioButtons(
-      options=['protein sequence', 'protein structure'],
+      options=['protein sequence'],
+      value="protein sequence",
       disabled=False,
       style={'description_width': 'initial'},
       )
 
   data_src_hint = HTML(markdown.markdown("**Where is your data from:**"))
   data_src_type = ipywidgets.RadioButtons(
-      options=['SaprotHub in HuggingFace', 'Upload mannually'],
+      options=['SeprotHub in HuggingFace', 'Upload mannually'],
       value="Upload mannually",
       layout={'width': 'max-content'}, # If the items' names are long
       disabled=False,
@@ -2004,14 +2220,14 @@ def choose_training_task():
 
   saprothub_data_id = ipywidgets.Text(
               value=None,
-              placeholder=f'Enter SaprotHub dataset id in HuggingFace',
+              placeholder=f'Enter SaprotHub or SeprotHub dataset id in HuggingFace',
               disabled=False,
               description="Dataset id:",
               layout=Layout(width=WIDTH, height=HEIGHT, display="none"),
               )
   saprothub_data_id_hint = HTML(markdown.markdown(
-      "<font color=red>You could search datasets using our <a href='https://huggingface.co/spaces/SaProtHub/SaprotHub-search' target='blank'>search engine</a> or from <a href='https://huggingface.co/SaProtHub' target='blank'>SaprotHub</a>\n\n"
-      "A dataset id example: <a href='https://huggingface.co/datasets/SaProtHub/Dataset-Binary_Localization-DeepLoc' target='blank'>SaProtHub/Dataset-Binary_Localization-DeepLoc</a></font>"
+      "<font color=red>You could search datasets from <a href='https://huggingface.co/SeprotHub' target='blank'>SeprotHub</a>\n\n"
+      "A dataset id example: <a href='https://huggingface.co/datasets/SeprotHub/Dataset-GB1-fitness' target='blank'>SeProtHub/Dataset-GB1-fitness</a></font>"
       ), layout=Layout(display="none"))
 
   upload_hint = HTML(markdown.markdown(
@@ -2020,7 +2236,7 @@ def choose_training_task():
             "Please upload a ``.csv`` file that contains all protein sequences to train. Please strictly follow the format above **(column names are also needed in the csv file)**."
             ))
   data_example_hint = HTML(markdown.markdown(
-            f"<a href='https://github.com/westlake-repl/SaprotHub/tree/main/upload_files/ColabSaprot_v2_example_csv_dataset/train/' target='blank'>Here</a> are some toy examples."
+            f"<a href='https://github.com/westlake-repl/SaprotHub/tree/main/upload_files/ColabSeprot_example_csv_dataset/train' target='blank'>Here</a> are some toy examples."
             ))
 
   upliad_items_hint_1 = HTML(markdown.markdown(
@@ -2151,8 +2367,8 @@ def choose_training_task():
       dataset_hint,
       data_src_hint,
       data_src_type,
-      data_type_hint,
-      data_type,
+      # data_type_hint,
+    #   data_type,
       saprothub_data_id,
       saprothub_data_id_hint,
       upload_hint,
@@ -2198,7 +2414,7 @@ def choose_training_task():
 
     saprot_650m_hint.layout.display = None if "650M" in model_type_value else "none"
 
-    if model_type_value == "Trained by yourself on ColabSaprot":
+    if model_type_value == "Trained by yourself on ColabSeprot":
       model_arg_box = select_adapter_from(None, use_model_from=model_type_value)
       model_arg_box.layout.width = WIDTH
       model_arg_box.description = "Select your local model:"
@@ -2207,10 +2423,10 @@ def choose_training_task():
       saprothub_link.layout.display = "none"
       custom_display(*items)
 
-    elif model_type_value == "Shared by peers on SaprotHub":
+    elif model_type_value == "Shared by peers on SeprotHub":
       model_arg_box = select_adapter_from(None, use_model_from=model_type_value)
       model_arg_box.layout.width = WIDTH
-      model_arg_box.placeholder = "Enter SaprotHub model id in HuggingFace"
+      model_arg_box.placeholder = "Enter SeprotHub model id in HuggingFace"
       model_arg_box.description = "Model id:"
       items[model_arg_box_idx] = model_arg_box
       saprothub_link.layout.display = None
@@ -2241,7 +2457,7 @@ def choose_training_task():
 
   def change_data_src_type(change):
     data_src_type_value = change["new"]
-    if data_src_type_value == "SaprotHub in HuggingFace":
+    if data_src_type_value == "SeprotHub in HuggingFace":
       saprothub_data_id.layout.display = None
       saprothub_data_id_hint.layout.display = None
       for item in [data_type_hint, data_type, upload_hint, data_example_hint]:
@@ -2353,430 +2569,476 @@ def choose_training_task():
   def start_training(button):
     print("Start training...")
 
-    task_type_value = task_type.value
-    model_type_value = model_type.value
-    model_arg = items[model_arg_box_idx].value
-
-    # Check compatibility between chosen task and model
-    if model_type_value == "Shared by peers on SaprotHub" or model_type_value == "Trained by yourself on ColabSaprot" or model_type_value == "Saved in your local computer":
-      if model_type_value == "Saved in your local computer":
-        zip_path = get_upload_file_path(upload_model_items)
-        name = os.path.basename(zip_path)
-        save_dir = ADAPTER_HOME / "Upload" / name.rsplit('.', 1)[0]
-        os.makedirs(save_dir, exist_ok=True)
-        # unzip model.zip
-        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-            zip_ref.extractall(save_dir)
-        os.remove(zip_path)
-        model_arg = save_dir
-
-      model_task_type = load_task_type_from_model(model_type_value, model_arg)
-      assert task_type_value == model_task_type, f"The model you choose was trained on {model_task_type} task, which is not suitable for the {task_type_value} task you choose!"
-
-    ######################################################################
-    #            Start training              #
-    ######################################################################
-    from saprot.config.config_dict import Default_config
-    config = copy.deepcopy(Default_config)
-
-    # training config
-    GPU_batch_size = 0
-    accumulate_grad_batches = 0
-    num_workers = 2
-    seed = 20000812
-
-    # lora config
-    r = lora_r.value
-    lora_dropout = lora_dropout_box.value
-    lora_alpha = lora_alpha_box.value
-
-    # dataset config
-    val_check_interval = val_check_interval_box.value
-    limit_train_batches = limit_train_batches_box.value
-    limit_val_batches = limit_val_batches_box.value
-    limit_test_batches = limit_test_batches_box.value
-
-    mask_struc_ratio=None
-    if torch.cuda.is_available() is False:
-      raise BaseException("Please switch your Runtime to a GPU!")
-
-    # Task config
-    task_name_value = task_name.value.replace(" ", "_")
-    task_type_value = task_type.value
-    original_task_type = task_type_value
-    task_type_value = task_type_dict[task_type_value]
-
-    #####################################################################
-    #            Model config               #
-    #####################################################################
-    base_model = model_type.value
-    # continue learning
-    if base_model in ["Trained by yourself on ColabSaprot", "Shared by peers on SaprotHub", "Saved in your local computer"]:
-      continue_learning = True
-    else:
-      continue_learning = False
-
-    # base_model
-    if continue_learning:
-      adapter_path = ADAPTER_HOME / model_arg
-      print(f"Training on an existing model: {adapter_path}")
-
-      if base_model == "Shared by peers on SaprotHub":
-        if not adapter_path.exists():
-          snapshot_download(repo_id=model_arg, repo_type="model", local_dir=adapter_path)
-
-      adapter_config_path = Path(adapter_path) / "adapter_config.json"
-      assert adapter_config_path.exists(), f"Can't find {adapter_config_path}"
-      with open(adapter_config_path, 'r') as f:
-        adapter_config = json.load(f)
-        base_model = adapter_config['base_model_name_or_path']
-
-    elif base_model == "Official SaProt (35M)":
-      base_model = "westlake-repl/SaProt_35M_AF2"
-
-    elif base_model == "Official SaProt (650M)":
-      base_model = "westlake-repl/SaProt_650M_AF2"
-
-    # model size and model name
-    if base_model == "westlake-repl/SaProt_650M_AF2":
-      model_size = "650M"
-      model_name = f"Model-{task_name_value}-{model_size}"
-    elif base_model == "westlake-repl/SaProt_35M_AF2":
-      model_size = "35M"
-      model_name = f"Model-{task_name_value}-{model_size}"
-
-    config.setting.run_mode = "train"
-    config.setting.seed = seed
-
-    if task_type_value in ["classification", "token_classification", "pair_classification"]:
-      config.model.kwargs.num_labels = num_label.value
-
-    config.model.model_py_path = model_type_dict[task_type_value]
-    config.model.kwargs.config_path = base_model
-    config.dataset.kwargs.tokenizer = base_model
-
-    config.model.save_path = str(ADAPTER_HOME / "Local" / f"{task_type_value}" / model_name)
-
-    if task_type_value in ["regression", "pair_regression"]:
-      config.model.kwargs.extra_config = {}
-      config.model.kwargs.extra_config.attention_probs_dropout_prob=0
-      config.model.kwargs.extra_config.hidden_dropout_prob=0
-
-    config.model.kwargs.lora_kwargs = EasyDict({
-      "is_trainable": True,
-      "num_lora": 1,
-      "r": r,
-      "lora_dropout": lora_dropout,
-      "lora_alpha": lora_alpha,
-      "config_list": []})
-    if continue_learning:
-      config.model.kwargs.lora_kwargs.config_list.append({"lora_config_path": adapter_path})
-
-    #####################################################################
-    #            Dataset config              #
-    #####################################################################
-    if data_src_type.value == "SaprotHub in HuggingFace":
-      data_src_type_value = "SaprotHub Dataset"
-      raw_data = saprothub_data_id
-      csv_dataset_path = get_SA_sequence_by_data_type(data_src_type_value, raw_data)
-
-      # Get the meta-data of the dataset
-      metadata_path = DATASET_HOME / saprothub_data_id.value / 'metadata.json'
-      metadata = json.load(open(metadata_path, "r"))
-
-      # Check compatibility between chosen task and data
-      assert metadata["training_task_type"] == task_type.value, f"This dataset is for '{metadata['training_task_type']}', which is not suitable for your task '{task_type.value}'"
-
-      # Check compatibility between chosen data and model
-      if model_type_value == "Shared by peers on SaprotHub" or model_type_value == "Trained by yourself on ColabSaprot":
-        model_data_type = load_data_type_from_model(model_type_value, model_arg)
-
-        if model_data_type != metadata["training_data_type"]:
-          if model_data_type == "SA":
-            raise Exception("Error: The model you choose should be trained on protein structures. So you have to choose protein structure dataset!")
-          else:
-            raise Exception("Error: The model you choose should be trained on protein sequences. So you have to choose protein sequence dataset!")
-
-    else:
-      data_type_value = data_type.value
-      metadata = {
-          "training_task_type": task_type.value,
-          "training_data_type": "AA" if data_type_value == "protein sequence" else "SA"
-      }
-
-      csv_path = get_upload_file_path(upload_items_1)
-      assert csv_path.endswith(".csv"), "Please upload file with correct format (.csv)!"
-
-      if data_type_value == "protein sequence":
-        if "Protein-protein" not in task_type.value:
-          processed_data_type = "Multiple AA Sequences"
-        else:
-          processed_data_type = "Multiple pairs of AA Sequences"
-
-        tmp_path = f"{csv_path}.tmp"
-        os.system(f"cp {csv_path} {tmp_path}")
-        csv_dataset_path = get_SA_sequence_by_data_type(processed_data_type, tmp_path)
-
-        # df = pd.read_csv(csv_dataset_path)
-        # print(df)
-        # raise
-
-      else:
-        zip_path = get_upload_file_path(upload_items_2)
-        zip_name = os.path.basename(zip_path)
-        assert zip_path.endswith(".zip"), "Please upload file with correct format (.zip)!"
-
-        # Unzip structures
-        upload_path = Path(UPLOAD_FILE_HOME)
-        upload_path.mkdir(parents=True, exist_ok=True)
-        prefix = zip_name.rsplit(".", 1)[0]
-        struc_dir = upload_path / prefix
-        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-          zip_ref.extractall(struc_dir)
-
-        # If the unzipped file is a directory
-        unzipped_files = os.listdir(struc_dir)
-        if len(unzipped_files) == 1:
-          file_path = f"{struc_dir}/{unzipped_files[0]}"
-          if os.path.isdir(file_path):
-            struc_dir = file_path
-
-        df = pd.read_csv(csv_path)
-        if "Protein-protein" not in task_type.value:
-          pdbs = []
-          for pdb_name, chain in df[["protein", "chain"]].values:
-            pdb_path = f"{struc_dir}/{pdb_name}"
-            pdbs.append([pdb_path, chain])
-
-          sa_seqs = pdb2sa(pdbs)
-          df["protein"] = sa_seqs
-
-        else:
-          pdbs = []
-          for pdb_name, chain in df[["protein_1", "chain_1"]].values:
-            pdb_path = f"{struc_dir}/{pdb_name}"
-            pdbs.append([pdb_path, chain])
-
-          sa_seqs = pdb2sa(pdbs)
-          df["name_1"] = df["protein_1"]
-          df["protein_1"] = sa_seqs
-
-          pdbs = []
-          for pdb_name, chain in df[["protein_2", "chain_2"]].values:
-            pdb_path = f"{struc_dir}/{pdb_name}"
-            pdbs.append([pdb_path, chain])
-
-          sa_seqs = pdb2sa(pdbs)
-          df["name_2"] = df["protein_2"]
-          df["protein_2"] = sa_seqs
-
-        tmp_path = f"{csv_path}.tmp"
-        os.system(f"cp {csv_path} {tmp_path}")
-        df.to_csv(tmp_path, index=False)
-        csv_dataset_path = tmp_path
-
-    # Rename columns to match backend functions
-    df = pd.read_csv(csv_dataset_path)
-    if "Protein-protein" in task_type.value:
-      df = df.rename(columns={"protein_1": "sequence_1", "protein_2": "sequence_2"})
-    else:
-      df = df.rename(columns={"protein": "sequence"})
-
-    if "stage" not in df.columns:
-      print("The 'stage' column was not provided. We will randomly split the data into training, validation and test set.")
-      train_len = int(0.8 * len(df))
-      valid_len = int(0.1 * len(df))
-      test_len = len(df) - train_len - valid_len
-      stage = ["train"] * train_len + ["valid"] * valid_len + ["test"] * test_len
-
-      # assert train_len > 0 and valid_len > 0 and test_len > 0, "Please provide more data for splitting"
-      if train_len == 0 or valid_len == 0 or test_len == 0:
-        red_print("Error: The size of your data is too small. Please provide more data for training (>= 10).")
-        return
-
-
-      # Shuffle the stage labels
-      random.shuffle(stage)
-      df["stage"] = stage
-
-    csv_for_lmdb_path = f"{csv_dataset_path}.for_lmdb"
-    df.to_csv(csv_for_lmdb_path, index=False)
-    check_column_label_and_stage(csv_for_lmdb_path)
-
-    # Check the number of labels for classification task
-    if task_type_value in ["classification", "token_classification", "pair_classification"]:
-      max_label = 0
-
-      try:
-        for label in df["label"].values:
-          if task_type_value == "token_classification":
-            label_ids = [int(i.strip()) for i in label.strip().split(",")]
-            max_label = max([max_label] + label_ids)
-
-          else:
-            max_label = max(max_label, int(label))
-
-      except Exception:
-        raise Exception("Please make sure you upload the correct data according to the task type you choose!")
-
-      assert num_label.value > max_label, f"The number of category you set ({num_label.value}) should match the dataset you upload ({max_label+1})!"
-
-    from saprot.utils.construct_lmdb import construct_lmdb
     try:
-      construct_lmdb(csv_for_lmdb_path, LMDB_HOME, task_name_value, task_type_value)
+        task_type_value = task_type.value
+        model_type_value = model_type.value
+        model_arg = items[model_arg_box_idx].value
 
-    except Exception:
-      raise Exception("Please make sure you upload the correct data according to the task type you choose!")
+        # Check compatibility between chosen task and model
+        if model_type_value == "Shared by peers on SeprotHub" or model_type_value == "Trained by yourself on ColabSeprot" or model_type_value == "Saved in your local computer":
+          if model_type_value == "Saved in your local computer":
+            zip_path = get_upload_file_path(upload_model_items)
+            name = os.path.basename(zip_path)
+            save_dir = ADAPTER_HOME / "Upload" / name.rsplit('.', 1)[0]
+            os.makedirs(save_dir, exist_ok=True)
+            # unzip model.zip
+            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                zip_ref.extractall(save_dir)
+            os.remove(zip_path)
+            model_arg = save_dir
 
-    lmdb_dataset_path = LMDB_HOME / task_name_value
+          model_task_type = load_task_type_from_model(model_type_value, model_arg)
+          assert task_type_value == model_task_type, f"The model you choose was trained on {model_task_type} task, which is not suitable for the {task_type_value} task you choose!"
 
-    config.dataset.dataset_py_path = dataset_type_dict[task_type_value]
+        ######################################################################
+        #            Start training              #
+        ######################################################################
+        from saprot.config.config_dict import Default_config
+        config = copy.deepcopy(Default_config)
 
-    config.dataset.train_lmdb = str(lmdb_dataset_path / "train")
-    config.dataset.valid_lmdb = str(lmdb_dataset_path / "valid")
-    config.dataset.test_lmdb = str(lmdb_dataset_path / "test")
+        # training config
+        GPU_batch_size = 0
+        accumulate_grad_batches = 0
+        num_workers = 2
+        seed = 20000812
 
-    # num_workers
-    config.dataset.dataloader_kwargs.num_workers = num_workers
+        # lora config
+        r = lora_r.value
+        lora_dropout = lora_dropout_box.value
+        lora_alpha = lora_alpha_box.value
 
-    def get_accumulate_grad_samples(num_samples):
-        if num_samples > 3200:
-            return 64
-        elif 1600 < num_samples <= 3200:
-            return 32
-        elif 800 < num_samples <= 1600:
-            return 16
-        elif 400 < num_samples <= 800:
-            return 8
-        elif 200 < num_samples <= 400:
-            return 4
-        elif 100 < num_samples <= 200:
-            return 2
+        # dataset config
+        val_check_interval = val_check_interval_box.value
+        limit_train_batches = limit_train_batches_box.value
+        limit_val_batches = limit_val_batches_box.value
+        limit_test_batches = limit_test_batches_box.value
+
+        mask_struc_ratio=None
+        if torch.cuda.is_available() is False:
+          raise BaseException("Please switch your Runtime to a GPU!")
+
+        # Task config
+        task_name_value = task_name.value.replace(" ", "_")
+        task_type_value = task_type.value
+        original_task_type = task_type_value
+        task_type_value = task_type_dict[task_type_value]
+
+        #####################################################################
+        #            Model config               #
+        #####################################################################
+        base_model = model_type.value
+        # continue learning
+        if base_model in ["Trained by yourself on ColabSeprot", "Shared by peers on SeprotHub", "Saved in your local computer"]:
+          continue_learning = True
         else:
-            return 1
+          continue_learning = False
 
-    # advanced config
-    if (GPU_batch_size > 0) and (accumulate_grad_batches > 0):
-      config.dataset.dataloader_kwargs.batch_size = GPU_batch_size
-      config.Trainer.accumulate_grad_batches= accumulate_grad_batches
+        # base_model
+        if continue_learning:
+          adapter_path = ADAPTER_HOME / model_arg
+          print(f"Training on an existing model: {adapter_path}")
 
-    elif (GPU_batch_size == 0) and (accumulate_grad_batches == 0):
+          if base_model == "Shared by peers on SeprotHub":
+            if not adapter_path.exists():
+              snapshot_download(repo_id=model_arg, repo_type="model", local_dir=adapter_path)
 
-      # batch_size
-      # if base_model == "westlake-repl/SaProt_650M_AF2" and root_dir == "/content":
-      #   GPU_batch_size = 1
-      # else:
-      #   GPU_batch_size_dict = {
-      #     "Tesla T4": 2,
-      #     "NVIDIA L4": 2,
-      #     "NVIDIA A100-SXM4-40GB": 4,
-      #     }
-      #   GPU_name = torch.cuda.get_device_name(0)
-      #   GPU_batch_size = GPU_batch_size_dict[GPU_name] if GPU_name in GPU_batch_size_dict else 2
+          adapter_config_path = Path(adapter_path) / "adapter_config.json"
+          assert adapter_config_path.exists(), f"Can't find {adapter_config_path}"
+          with open(adapter_config_path, 'r') as f:
+            adapter_config = json.load(f)
+            base_model = adapter_config['base_model_name_or_path']
 
-      #   if task_type_value in ["pair_classification", "pair_regression"]:
-      #     GPU_batch_size = int(max(GPU_batch_size / 2, 1))
-      GPU_batch_size = 1
-      config.dataset.dataloader_kwargs.batch_size = GPU_batch_size
+        elif base_model == "Official ESM2 (35M)":
+          base_model = "facebook/esm2_t12_35M_UR50D"
+        elif base_model == "Official ESM2 (150M)":
+          base_model = "facebook/esm2_t30_150M_UR50D"
+        elif base_model == "Official ESM2 (650M)":
+          base_model = "facebook/esm2_t33_650M_UR50D"
+        elif base_model == "Official ESMC (300M)":
+          base_model = "EvolutionaryScale/esmc-300m-2024-12"
+        elif base_model == "Official ProTrek (35M)":
+          base_model = "ProTrekHub/Protein_Encoder_35M"
+        elif base_model == "Official ProTrek (650M)":
+          base_model = "ProTrekHub/Protein_Encoder_650M"
+        elif base_model == "Official ProtBert (420M)":
+          base_model = "Rostlab/prot_bert"
+        elif base_model == 'Official ESM1b (650M)':
+          base_model = "facebook/esm1b_t33_650M_UR50S"
+        elif base_model == "Official SaProt_AF2 (35M)":
+          base_model = "westlake-repl/SaProt_35M_AF2_seqOnly"
+        elif base_model == "Official SaProt_SeqOnly (1.3B)":
+          base_model = "westlake-repl/SaProt_1.3B_AFDB_OMG_NCBI"
 
-      # accumulate_grad_batches
-      if batch_size.value == "Adaptive":
-        num_samples = get_length(config.dataset.train_lmdb)
-        accumulate_grad_samples = get_accumulate_grad_samples(num_samples)
-
-      else:
-        accumulate_grad_samples = int(batch_size.value)
-
-      accumulate_grad_batches = max(int(accumulate_grad_samples / GPU_batch_size), 1)
-
-      config.Trainer.accumulate_grad_batches= accumulate_grad_batches
-
-      # For test
-      config.Trainer.accumulate_grad_batches= 64
-      config.dataset.dataloader_kwargs.batch_size = 1
-
-    else:
-      raise BaseException(f"Please make sure `GPU_batch_size`({GPU_batch_size}) and `accumulate_grad_batches`({accumulate_grad_batches}) are both greater than zero!")
-
-    #####################################################################
-    #          Hyper-parameter config            #
-    #####################################################################
-    epoch_value = epoch.value
-    lr_value = lr.value
-
-    #####################################################################
-    #               Trainer               #
-    #####################################################################
-    config.Trainer.accelerator = "gpu" if torch.cuda.is_available() else "cpu"
-
-    # epoch
-    config.Trainer.max_epochs = epoch_value
-    # test only: load the existing model
-    if config.Trainer.max_epochs == 0 and continue_learning:
-      config.model.save_path = config.model.kwargs.lora_kwargs.config_list[0]['lora_config_path']
-
-    # learning rate
-    config.model.lr_scheduler_kwargs.init_lr = lr_value
-
-    # trainer
-    config.Trainer.limit_train_batches=limit_train_batches
-    config.Trainer.limit_val_batches=limit_val_batches
-    config.Trainer.limit_test_batches=limit_test_batches
-    config.Trainer.val_check_interval=val_check_interval
-
-    # strategy
-    strategy = {
-        # - deepspeed
-        # 'class': 'DeepSpeedStrategy',
-        # 'stage': 2
-
-        # - None
-        # 'class': None,
-
-        # - DP
-        # 'class': 'DataParallelStrategy',
-
-        # - DDP
-        # 'class': 'DDPStrategy',
-        # 'find_unused_parameter': True
-    }
-    config.Trainer.strategy = strategy
-
-    ####################################################################
-    #          Run the training task           #
-    ####################################################################
-    print('='*100)
-    print(Fore.BLUE+f"Training task type: {task_type_value}"+Style.RESET_ALL)
-    print(Fore.BLUE+f"Dataset: {lmdb_dataset_path}"+Style.RESET_ALL)
-    print(Fore.BLUE+f"Base Model: {config.model.kwargs.config_path}"+Style.RESET_ALL)
-    if continue_learning:
-      print(Fore.BLUE+f"Existing model: {config.model.kwargs.lora_kwargs.config_list[0]['lora_config_path']}"+Style.RESET_ALL)
-    print('='*100)
-    pprint.pprint(config)
-    print('='*100)
-
-    # Save the metadata file
-    def add_training_data_type_to_config(metadata_path, metadata):
-      with open(metadata_path, 'w') as file:
-          json.dump(metadata, file, indent=4)
-    metadata_path = Path(config.model.save_path) / "metadata.json"
-    os.makedirs(config.model.save_path, exist_ok=True)
-    add_training_data_type_to_config(metadata_path, metadata)
-
-    from saprot.scripts.training import finetune
-    finetune(config)
+        # model size and model name
+        if base_model == "facebook/esm2_t12_35M_UR50D":
+          model_size = "35M"
+          model_name = f"Model-{task_name_value}-ESM2-{model_size}"
+        elif base_model == "facebook/esm2_t30_150M_UR50D":
+          model_size = "150M"
+          model_name = f"Model-{task_name_value}-ESM2-{model_size}"
+        elif base_model == "facebook/esm2_t33_650M_UR50D":
+          model_size = "650M"
+          model_name = f"Model-{task_name_value}-ESM2-{model_size}"
+        elif base_model == "EvolutionaryScale/esmc-300m-2024-12":
+          model_size = "300M"
+          model_name = f"Model-{task_name_value}-ESMC-{model_size}"
+        elif base_model == "ProTrekHub/Protein_Encoder_35M":
+          model_size = "35M"
+          model_name = f"Model-{task_name_value}-ProTrek-{model_size}"
+        elif base_model == "ProTrekHub/Protein_Encoder_650M":
+          model_size = "650M"
+          model_name = f"Model-{task_name_value}-ProTrek-{model_size}"
+        elif base_model == "Rostlab/prot_bert":
+          model_size = "420M"
+          model_name = f"Model-{task_name_value}-ProtBert-{model_size}"
+        elif base_model == "facebook/esm1b_t33_650M_UR50S":
+          model_size = "650M"
+          model_name = f"Model-{task_name_value}-ESM1b-{model_size}"
+        elif base_model == "westlake-repl/SaProt_1.3B_AFDB_OMG_NCBI":
+          model_size = "1.3B"
+          model_name = f"Model-{task_name_value}-SaProt_SeqOnly-{model_size}"
+        elif base_model == "westlake-repl/SaProt_35M_AF2_seqOnly":
+          model_size = "35M"
+          model_name = f"Model-{task_name_value}-SaProt_AF2-{model_size}"
+        else:
+          # 添加默认情况处理
+          model_size = "custom"
+          model_name = f"Model-{task_name_value}-{model_size}"
 
 
-    ####################################################################
-    #            Modify README              #
-    ####################################################################
-    name = model_name
-    description = '<slot name=\'description\'>'
+        config.setting.run_mode = "train"
+        config.setting.seed = seed
 
-    with open(f'{config.model.save_path}/adapter_config.json', 'r') as f:
-      lora_config = json.load(f)
+        if task_type_value in ["classification", "token_classification", "pair_classification"]:
+          config.model.kwargs.num_labels = num_label.value
 
-    readme = f'''
+        config.model.model_py_path = model_type_dict[task_type_value]
+        config.model.kwargs.config_path = base_model
+        config.dataset.kwargs.tokenizer = base_model
+
+        config.model.save_path = str(ADAPTER_HOME / "Local" / f"{task_type_value}" / model_name)
+
+        if task_type_value in ["regression", "pair_regression"]:
+          config.model.kwargs.extra_config = {}
+          config.model.kwargs.extra_config.attention_probs_dropout_prob=0
+          config.model.kwargs.extra_config.hidden_dropout_prob=0
+
+        config.model.kwargs.lora_kwargs = EasyDict({
+          "is_trainable": True,
+          "num_lora": 1,
+          "r": r,
+          "lora_dropout": lora_dropout,
+          "lora_alpha": lora_alpha,
+          "config_list": []})
+        if continue_learning:
+          config.model.kwargs.lora_kwargs.config_list.append({"lora_config_path": adapter_path})
+
+        #####################################################################
+        #            Dataset config              #
+        #####################################################################
+        if data_src_type.value == "SeprotHub in HuggingFace":
+          data_src_type_value = "SaprotHub Dataset"
+          raw_data = saprothub_data_id
+          csv_dataset_path = get_SA_sequence_by_data_type(data_src_type_value, raw_data)
+
+          # Get the meta-data of the dataset
+          metadata_path = DATASET_HOME / saprothub_data_id.value / 'metadata.json'
+          metadata = json.load(open(metadata_path, "r"))
+
+          # Check compatibility between chosen task and data
+          assert metadata["training_task_type"] == task_type.value, f"This dataset is for '{metadata['training_task_type']}', which is not suitable for your task '{task_type.value}'"
+
+          # Check compatibility between chosen data and model
+          if model_type_value == "Shared by peers on SeprotHub" or model_type_value == "Trained by yourself on ColabSeprot":
+            model_data_type = load_data_type_from_model(model_type_value, model_arg)
+
+            if model_data_type != metadata["training_data_type"]:
+              if model_data_type == "SA":
+                raise Exception("Error: The model you choose should be trained on protein structures. So you have to choose protein structure dataset!")
+              else:
+                raise Exception("Error: The model you choose should be trained on protein sequences. So you have to choose protein sequence dataset!")
+
+        else:
+          data_type_value = data_type.value
+          metadata = {
+              "training_task_type": task_type.value,
+              "training_data_type": "AA" if data_type_value == "protein sequence" else "SA"
+          }
+
+          csv_path = get_upload_file_path(upload_items_1)
+          assert csv_path.endswith(".csv"), "Please upload file with correct format (.csv)!"
+
+          if data_type_value == "protein sequence":
+            if "Protein-protein" not in task_type.value:
+              processed_data_type = "Multiple AA Sequences"
+            else:
+              processed_data_type = "Multiple pairs of AA Sequences"
+
+            tmp_path = f"{csv_path}.tmp"
+            os.system(f"cp {csv_path} {tmp_path}")
+            csv_dataset_path = get_SA_sequence_by_data_type(processed_data_type, tmp_path)
+
+            # df = pd.read_csv(csv_dataset_path)
+            # print(df)
+            # raise
+
+          else:
+            zip_path = get_upload_file_path(upload_items_2)
+            zip_name = os.path.basename(zip_path)
+            assert zip_path.endswith(".zip"), "Please upload file with correct format (.zip)!"
+
+            # Unzip structures
+            upload_path = Path(UPLOAD_FILE_HOME)
+            upload_path.mkdir(parents=True, exist_ok=True)
+            prefix = zip_name.rsplit(".", 1)[0]
+            struc_dir = upload_path / prefix
+            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+              zip_ref.extractall(struc_dir)
+
+            # If the unzipped file is a directory
+            unzipped_files = os.listdir(struc_dir)
+            if len(unzipped_files) == 1:
+              file_path = f"{struc_dir}/{unzipped_files[0]}"
+              if os.path.isdir(file_path):
+                struc_dir = file_path
+
+            df = pd.read_csv(csv_path)
+            if "Protein-protein" not in task_type.value:
+              pdbs = []
+              for pdb_name, chain in df[["protein", "chain"]].values:
+                pdb_path = f"{struc_dir}/{pdb_name}"
+                pdbs.append([pdb_path, chain])
+
+              sa_seqs = pdb2sa(pdbs)
+              df["protein"] = sa_seqs
+
+            else:
+              pdbs = []
+              for pdb_name, chain in df[["protein_1", "chain_1"]].values:
+                pdb_path = f"{struc_dir}/{pdb_name}"
+                pdbs.append([pdb_path, chain])
+
+              sa_seqs = pdb2sa(pdbs)
+              df["name_1"] = df["protein_1"]
+              df["protein_1"] = sa_seqs
+
+              pdbs = []
+              for pdb_name, chain in df[["protein_2", "chain_2"]].values:
+                pdb_path = f"{struc_dir}/{pdb_name}"
+                pdbs.append([pdb_path, chain])
+
+              sa_seqs = pdb2sa(pdbs)
+              df["name_2"] = df["protein_2"]
+              df["protein_2"] = sa_seqs
+
+            tmp_path = f"{csv_path}.tmp"
+            os.system(f"cp {csv_path} {tmp_path}")
+            df.to_csv(tmp_path, index=False)
+            csv_dataset_path = tmp_path
+
+        # Rename columns to match backend functions
+        df = pd.read_csv(csv_dataset_path)
+        if "Protein-protein" in task_type.value:
+          df = df.rename(columns={"protein_1": "sequence_1", "protein_2": "sequence_2"})
+        else:
+          df = df.rename(columns={"protein": "sequence"})
+
+        if "stage" not in df.columns:
+          print("The 'stage' column was not provided. We will randomly split the data into training, validation and test set.")
+          train_len = int(0.8 * len(df))
+          valid_len = int(0.1 * len(df))
+          test_len = len(df) - train_len - valid_len
+          stage = ["train"] * train_len + ["valid"] * valid_len + ["test"] * test_len
+
+          # assert train_len > 0 and valid_len > 0 and test_len > 0, "Please provide more data for splitting"
+          if train_len == 0 or valid_len == 0 or test_len == 0:
+            red_print("Error: The size of your data is too small. Please provide more data for training (>= 10).")
+            return
+
+
+          # Shuffle the stage labels
+          random.shuffle(stage)
+          df["stage"] = stage
+
+        csv_for_lmdb_path = f"{csv_dataset_path}.for_lmdb"
+        df.to_csv(csv_for_lmdb_path, index=False)
+        aa_csv_for_lmdb_path = check_column_label_and_stage(csv_for_lmdb_path)
+
+        # Check the number of labels for classification task
+        if task_type_value in ["classification", "token_classification", "pair_classification"]:
+          max_label = 0
+
+          try:
+            for label in df["label"].values:
+              if task_type_value == "token_classification":
+                label_ids = [int(i.strip()) for i in label.strip().split(",")]
+                max_label = max([max_label] + label_ids)
+
+              else:
+                max_label = max(max_label, int(label))
+
+          except Exception:
+            raise Exception("Please make sure you upload the correct data according to the task type you choose!")
+
+          assert num_label.value > max_label, f"The number of category you set ({num_label.value}) should match the dataset you upload ({max_label+1})!"
+
+        from saprot.utils.construct_lmdb import construct_lmdb
+        try:
+          construct_lmdb(aa_csv_for_lmdb_path, LMDB_HOME, task_name_value, task_type_value)
+
+        except Exception:
+          raise Exception("Please make sure you upload the correct data according to the task type you choose!")
+
+        lmdb_dataset_path = LMDB_HOME / task_name_value
+
+        config.dataset.dataset_py_path = dataset_type_dict[task_type_value]
+
+        config.dataset.train_lmdb = str(lmdb_dataset_path / "train")
+        config.dataset.valid_lmdb = str(lmdb_dataset_path / "valid")
+        config.dataset.test_lmdb = str(lmdb_dataset_path / "test")
+
+        # num_workers
+        config.dataset.dataloader_kwargs.num_workers = num_workers
+
+        def get_accumulate_grad_samples(num_samples):
+            if num_samples > 3200:
+                return 64
+            elif 1600 < num_samples <= 3200:
+                return 32
+            elif 800 < num_samples <= 1600:
+                return 16
+            elif 400 < num_samples <= 800:
+                return 8
+            elif 200 < num_samples <= 400:
+                return 4
+            elif 100 < num_samples <= 200:
+                return 2
+            else:
+                return 1
+
+        # advanced config
+        if (GPU_batch_size > 0) and (accumulate_grad_batches > 0):
+          config.dataset.dataloader_kwargs.batch_size = GPU_batch_size
+          config.Trainer.accumulate_grad_batches= accumulate_grad_batches
+
+        elif (GPU_batch_size == 0) and (accumulate_grad_batches == 0):
+
+          # batch_size
+          # if base_model == "westlake-repl/SaProt_650M_AF2" and root_dir == "/content":
+          #   GPU_batch_size = 1
+          # else:
+          #   GPU_batch_size_dict = {
+          #     "Tesla T4": 2,
+          #     "NVIDIA L4": 2,
+          #     "NVIDIA A100-SXM4-40GB": 4,
+          #     }
+          #   GPU_name = torch.cuda.get_device_name(0)
+          #   GPU_batch_size = GPU_batch_size_dict[GPU_name] if GPU_name in GPU_batch_size_dict else 2
+
+          #   if task_type_value in ["pair_classification", "pair_regression"]:
+          #     GPU_batch_size = int(max(GPU_batch_size / 2, 1))
+          GPU_batch_size = 1
+          config.dataset.dataloader_kwargs.batch_size = GPU_batch_size
+
+          # accumulate_grad_batches
+          if batch_size.value == "Adaptive":
+            num_samples = get_length(config.dataset.train_lmdb)
+            accumulate_grad_samples = get_accumulate_grad_samples(num_samples)
+
+          else:
+            accumulate_grad_samples = int(batch_size.value)
+
+          accumulate_grad_batches = max(int(accumulate_grad_samples / GPU_batch_size), 1)
+
+          config.Trainer.accumulate_grad_batches= accumulate_grad_batches
+
+          # For test
+          # config.Trainer.accumulate_grad_batches= 8  # 将此值从64改为8
+          # config.dataset.dataloader_kwargs.batch_size = 1
+
+        else:
+          raise BaseException(f"Please make sure `GPU_batch_size`({GPU_batch_size}) and `accumulate_grad_batches`({accumulate_grad_batches}) are both greater than zero!")
+
+        #####################################################################
+        #          Hyper-parameter config            #
+        #####################################################################
+        epoch_value = epoch.value
+        lr_value = lr.value
+
+        #####################################################################
+        #               Trainer               #
+        #####################################################################
+        config.Trainer.accelerator = "gpu" if torch.cuda.is_available() else "cpu"
+
+        # epoch
+        config.Trainer.max_epochs = epoch_value
+        # test only: load the existing model
+        if config.Trainer.max_epochs == 0 and continue_learning:
+          config.model.save_path = config.model.kwargs.lora_kwargs.config_list[0]['lora_config_path']
+
+        # learning rate
+        config.model.lr_scheduler_kwargs.init_lr = lr_value
+
+        # trainer
+        config.Trainer.limit_train_batches=limit_train_batches
+        config.Trainer.limit_val_batches=limit_val_batches
+        config.Trainer.limit_test_batches=limit_test_batches
+        config.Trainer.val_check_interval=val_check_interval
+
+        # strategy
+        strategy = {
+            # - deepspeed
+            # 'class': 'DeepSpeedStrategy',
+            # 'stage': 2
+
+            # - None
+            # 'class': None,
+
+            # - DP
+            # 'class': 'DataParallelStrategy',
+
+            # - DDP
+            # 'class': 'DDPStrategy',
+            # 'find_unused_parameter': True
+        }
+        config.Trainer.strategy = strategy
+
+        ####################################################################
+        #          Run the training task           #
+        ####################################################################
+        print('='*100)
+        print(Fore.BLUE+f"Training task type: {task_type_value}"+Style.RESET_ALL)
+        print(Fore.BLUE+f"Dataset: {lmdb_dataset_path}"+Style.RESET_ALL)
+        print(Fore.BLUE+f"Base Model: {config.model.kwargs.config_path}"+Style.RESET_ALL)
+        if continue_learning:
+          print(Fore.BLUE+f"Existing model: {config.model.kwargs.lora_kwargs.config_list[0]['lora_config_path']}"+Style.RESET_ALL)
+        print('='*100)
+        pprint.pprint(config)
+        print('='*100)
+
+        # Save the metadata file
+        def add_training_data_type_to_config(metadata_path, metadata):
+          with open(metadata_path, 'w') as file:
+              json.dump(metadata, file, indent=4)
+        metadata_path = Path(config.model.save_path) / "metadata.json"
+        os.makedirs(config.model.save_path, exist_ok=True)
+        add_training_data_type_to_config(metadata_path, metadata)
+
+
+        from saprot.scripts.training import finetune
+        finetune(config)
+
+
+        ####################################################################
+        #            Modify README              #
+        ####################################################################
+        name = model_name
+        description = '<slot name=\'description\'>'
+
+        with open(f'{config.model.save_path}/adapter_config.json', 'r') as f:
+          lora_config = json.load(f)
+
+        readme = f'''
 ---
 
 base_model: {base_model} \n
@@ -2813,42 +3075,51 @@ library_name: peft
 - **batch size:** {config.dataset.dataloader_kwargs.batch_size * config.Trainer.accumulate_grad_batches}
 - **precision:** 16-mixed \n
 '''
-    # Write the markdown output to a file
-    with open(f"{config.model.save_path}/README.md", "w") as file:
-      file.write(readme)
+        # Write the markdown output to a file
+        with open(f"{config.model.save_path}/README.md", "w") as file:
+          file.write(readme)
 
-    ####################################################################
-    #            Save the adapter            #
-    ####################################################################
-    print(Fore.BLUE)
-    print(f"Model is saved to \"{config.model.save_path}\" on Colab Server")
-    print(Style.RESET_ALL)
+        ####################################################################
+        #            Save the adapter            #
+        ####################################################################
+        print(Fore.BLUE)
+        print(f"Model is saved to \"{config.model.save_path}\" on Colab Server")
+        print(Style.RESET_ALL)
 
-    adapter_zip = Path(config.model.save_path) / f"{model_name}.zip"
-    cmd = f"cd {config.model.save_path} && zip -r {adapter_zip} 'adapter_config.json' 'adapter_model.safetensors' 'README.md' 'metadata.json'"
-    os.system(cmd)
-    # !cd $config.model.save_path && zip -r $adapter_zip "adapter_config.json" "adapter_model.safetensors" "README.md" "metadata.json"
-    # !cd $config.model.save_path && zip -r $adapter_zip "adapter_config.json" "adapter_model.safetensors" "adapter_model.bin" "README.md" "metadata.json"
-    print("Click to download the model to your local computer")
-    if adapter_zip.exists():
-      file_download(adapter_zip)
+        adapter_zip = Path(config.model.save_path) / f"{model_name}.zip"
+        cmd = f"cd {config.model.save_path} && zip -r {adapter_zip} 'adapter_config.json' 'adapter_model.safetensors' 'README.md' 'metadata.json'"
+        os.system(cmd)
+        # !cd $config.model.save_path && zip -r $adapter_zip "adapter_config.json" "adapter_model.safetensors" "README.md" "metadata.json"
+        # !cd $config.model.save_path && zip -r $adapter_zip "adapter_config.json" "adapter_model.safetensors" "adapter_model.bin" "README.md" "metadata.json"
+        print("Click to download the model to your local computer")
+        if adapter_zip.exists():
+          file_download(adapter_zip)
 
-    finish_hint = HTML(markdown.markdown(
-        f"## The training is completed, you can then:\n\n"
-        "- **Train other models or continually train this model with more epochs:**\n\n"
-        "\t1. Click the ``Refresh`` button.\n\n"
-        "\t2. Reset your training configuration and start a new training task.\n\n"
-        "- **Use this model for prediction:**\n\n"
-        "\t1. Click the ``Go back`` button.\n\n"
-        "\t2. Choose ``I want to use existing models to make prediction`` module.\n\n"
-        "\t3. Choose ``Protein property prediction`` module.\n\n"
-        "\t4. Set the base model option to ``Trained by yourself on ColabSaprot`` and then choose the model you trained for prediction.\n\n"
-        "- **Upload this trained model to SaprotHub:**\n\n"
-        "\t1. Click the ``Go back`` button.\n\n"
-        "\t2. Choose ``I want to share my model publicly`` module.\n\n"
-        "\t3. Complete a basic description of your model and upload it."
-        ))
-    display(finish_hint)
+        finish_hint = HTML(markdown.markdown(
+            f"## The training is completed, you can then:\n\n"
+            "- **Train other models or continually train this model with more epochs:**\n\n"
+            "\t1. Click the ``Refresh`` button.\n\n"
+            "\t2. Reset your training configuration and start a new training task.\n\n"
+            "- **Use this model for prediction:**\n\n"
+            "\t1. Click the ``Go back`` button.\n\n"
+            "\t2. Choose ``I want to use existing models to make prediction`` module.\n\n"
+            "\t3. Choose ``Protein property prediction`` module.\n\n"
+            "\t4. Set the base model option to ``Trained by yourself on ColabSeprot`` and then choose the model you trained for prediction.\n\n"
+            "- **Upload this trained model to SaprotHub:**\n\n"
+            "\t1. Click the ``Go back`` button.\n\n"
+            "\t2. Choose ``I want to share my model publicly`` module.\n\n"
+            "\t3. Complete a basic description of your model and upload it."
+            ))
+        display(finish_hint)
+
+    except Exception as e:
+
+        error_info = {
+            "error": str(e),
+            "error_type": str(type(e)),
+            "locals": {k: str(v) for k, v in locals().items() if not k.startswith("_")}
+        }
+        raise
 
   # Set click events
   task_type.observe(change_task_type, names='value')
@@ -2858,10 +3129,10 @@ library_name: peft
   advanced_setting.on_click(click_advanced_setting)
 
   start_btn.on_click(
-      # disable_wrapper(
-      #     lambda btn: start_thread(start_training, (btn,))
-      #     )
-      lambda btn: start_thread(start_training, (btn,))
+      disable_wrapper(
+          lambda btn: start_thread(start_training, (btn,))
+          )
+      # lambda btn: start_thread(start_training, (btn,))
       )
 
   # Set default state
@@ -2880,32 +3151,32 @@ def choose_pred_task():
 
   WIDTH = "500px"
 
-  question = HTML(markdown.markdown("## ColabSaprot supports multiple prediction tasks, which one would you like to choose?"))
+  question = HTML(markdown.markdown("## ColabSeprot supports multiple prediction tasks, which one would you like to choose?"))
   normal_pred = Button(description='Protein property prediction', layout=Layout(width='500px', height='30px'), button_style="info")
   normal_intro = HTML(markdown.markdown(
     f"This section enables property prediction using well-trained models for various protein characteristics, "
     "including stability, subcellular localization, and solubility, etc. Users can leverage either models "
-    "available in <a href='https://huggingface.co/SaProtHub' target='blank'>SaprotHub</a> or their previously trained models for predictions. The model input for "
+    "available in <a href='https://huggingface.co/SeprotHub' target='blank'>SeprotHub</a> or their previously trained models for predictions. The model input for "
     "predicting should be consistent with its training format."), layout=Layout(width=WIDTH))
 
   zeroshot_pred = Button(description='Mutational effect prediction', layout=Layout(width='500px', height='30px'), button_style="info")
   zeroshot_intro = HTML(markdown.markdown(
-  f"The Mutational Effect Prediction section utilizes the Saprot 650M model. By analyzing the predicted mutation "
+  f"The Mutational Effect Prediction section utilizes the Sequence-based Zero-shot model. By analyzing the predicted mutation "
   "scores, users can quickly identify mutations that are likely to enhance specific protein functions, such as "
   "enzyme activity."
   ), layout=Layout(width=WIDTH))
 
-  design_pred = Button(description='Protein sequence design', layout=Layout(width='500px', height='30px'), button_style="info")
-  design_intro = HTML(markdown.markdown(
-    f"The Sequence Design section enables generation of diverse protein sequences compatible with a given "
-    "structural backbone. Users can input their desired backbone coordinates and obtain novel sequences "
-    "optimized for that scaffold."
-    ), layout=Layout(width=WIDTH))
+  # design_pred = Button(description='Protein sequence design', layout=Layout(width='500px', height='30px'), button_style="info")
+  # design_intro = HTML(markdown.markdown(
+  #   f"The Sequence Design section enables generation of diverse protein sequences compatible with a given "
+  #   "structural backbone. Users can input their desired backbone coordinates and obtain novel sequences "
+  #   "optimized for that scaffold."
+  #   ), layout=Layout(width=WIDTH))
 
   repr_pred = Button(description='Obtain protein-level embeddings', layout=Layout(width='500px', height='30px'), button_style="info")
   repr_intro = HTML(markdown.markdown(
     f"The Protein Embedding section enables extraction of sequence or structure embeddings using either "
-    "standard Saprot models or custom fine-tuned models for specialized analysis tasks."
+    "standard Seprot models or custom fine-tuned models for specialized analysis tasks."
     ), layout=Layout(width=WIDTH))
 
   back_btn = Button(description='Go back', layout=Layout(width='500px', height='30px'))
@@ -2921,9 +3192,6 @@ def choose_pred_task():
       zeroshot_pred,
       zeroshot_intro,
       sep_hint,
-      design_pred,
-      design_intro,
-      sep_hint,
       repr_pred,
       repr_intro,
       sep_hint,
@@ -2933,7 +3201,6 @@ def choose_pred_task():
   # Set click events
   normal_pred.on_click(partial(jump, next=protein_property_prediction))
   zeroshot_pred.on_click(partial(jump, next=start_mut_pred))
-  design_pred.on_click(partial(jump, next=protein_sequence_design))
   repr_pred.on_click(partial(jump, next=obtain_protein_embedding))
   back_btn.on_click(partial(jump, next=train_or_pred))
 
@@ -2985,8 +3252,8 @@ def protein_property_prediction():
 
   model_hint = HTML(markdown.markdown("### Choose the model for prediction:"))
   model_type_box = ipywidgets.Dropdown(
-            options=["Trained by yourself on ColabSaprot", "Shared by peers on SaprotHub", "Saved in your local computer", "Multi-models on SaprotHub"],
-            value='Trained by yourself on ColabSaprot',
+            options=["Trained by yourself on ColabSeprot", "Shared by peers on SeprotHub", "Saved in your local computer", "Multi-models on SeprotHub"],
+            value='Trained by yourself on ColabSeprot',
             description='Base model:',
             disabled=False,
             layout=Layout(width=WIDTH, height=HEIGHT)
@@ -3000,19 +3267,19 @@ def protein_property_prediction():
   set_upload_visibility(upload_model_items, mode="none")
 
   saprothub_link = HTML(markdown.markdown(
-      "<font color=red>You could search models using our <a href='https://huggingface.co/spaces/SaProtHub/SaprotHub-search' target='blank'>search engine</a> or from <a href='https://huggingface.co/SaProtHub' target='blank'>SaprotHub</a>\n\n"
-      "A model id example: <a href='https://huggingface.co/SaProtHub/Model-Binary_Localization-650M' target='blank'>SaProtHub/Model-Binary_Localization-650M</a>\n\n"
+      "<font color=red>You could search models from <a href='https://huggingface.co/SeprotHub' target='blank'>SeprotHub</a>\n\n"
+      "A model id example: <a href='https://huggingface.co/SeprotHub/Model-Classification-ProTrek-35M' target='blank'>SeprotHub/Model-Classification-ProTrek-35M</a>\n\n"
       ), layout=Layout(display="none"))
 
   data_type_hint = HTML(markdown.markdown("### Uploaded data type:"))
   data_type_box = ipywidgets.RadioButtons(
-      options=['protein sequence', 'protein structure'],
-      value="protein structure",
+      options=['protein sequence'],
+      value="protein sequence",
       disabled=False,
       style={'description_width': 'initial'},
       )
   saprothub_data_type_hint = HTML(markdown.markdown(
-    "<font color=red>Note: For models with input type '(Structure-aware) sequence' in SaprotHub, protein structure input is required.</font>",
+    "<font color=red>Note: For models with input type '(Structure-aware) sequence' in SeprotHub, protein structure input is required.</font>",
     ), layout=Layout(display="none"))
 
   upload_type_hint = HTML(markdown.markdown("### Choose the number of protein:"))
@@ -3029,7 +3296,7 @@ def protein_property_prediction():
                 placeholder=f'Input protein sequence',
                 disabled=False,
                 description="Protein sequence:",
-                layout=Layout(width=WIDTH, height=HEIGHT, display="none"),
+                layout=Layout(width=WIDTH, height=HEIGHT),
                 style={'description_width': 'initial'},
                 )
   input_seq_box_2 = ipywidgets.Text(
@@ -3041,10 +3308,11 @@ def protein_property_prediction():
                 style={'description_width': 'initial'},
                 )
 
-  chain_hint_1 = HTML(markdown.markdown("Chain (to be extracted from the structure):"))
-  input_chain_1 = ipywidgets.Text(value="A",placeholder=f'Enter the name of chain here', layout=Layout(width="250px", height=HEIGHT))
-  upload_hint_1 = HTML(markdown.markdown("**Upload protein structure (.pdb / .cif file):**"))
+  chain_hint_1 = HTML(markdown.markdown("Chain (to be extracted from the structure):"), layout=Layout(display="none"))
+  input_chain_1 = ipywidgets.Text(value="A",placeholder=f'Enter the name of chain here', layout=Layout(width="250px", height=HEIGHT, display="none"))
+  upload_hint_1 = HTML(markdown.markdown("**Upload protein structure (.pdb / .cif file):**"), layout=Layout(display="none"))
   upload_items_1 = get_upload_box()
+  set_upload_visibility(upload_items_1, mode="none")
 
   chain_hint_2 = HTML(markdown.markdown("Chain (to be extracted from the structure):"), layout=Layout(display="none"))
   input_chain_2 = ipywidgets.Text(value="A",placeholder=f'Enter the name of chain here', layout=Layout(width="250px", height=HEIGHT, display="none"))
@@ -3066,20 +3334,20 @@ def protein_property_prediction():
       model_type_box,
       model_arg_box,
       saprothub_link,
-      data_type_hint,
-      data_type_box,
-      saprothub_data_type_hint,
+      # data_type_hint,
+    #   data_type_box,
+      # saprothub_data_type_hint,
       upload_type_hint,
       upload_type_box,
       input_seq_hint,
       input_seq_box_1,
       input_seq_box_2,
       upload_hint_1,
-      ipywidgets.HBox([chain_hint_1, input_chain_1]),
+      ipywidgets.HBox([input_chain_1, chain_hint_1]),
       *upload_items_1,
-      upload_hint_2,
-      ipywidgets.HBox([chain_hint_2, input_chain_2]),
-      *upload_items_2,
+    #   upload_hint_2,
+    #   ipywidgets.HBox([input_chain_2, chain_hint_2]),
+    #   *upload_items_2,
       save_path_hint,
       start_hint,
       start_btn
@@ -3101,22 +3369,22 @@ def protein_property_prediction():
 
   def change_model_type(change):
       model_type_value = change["new"]
-      if model_type_value == "Shared by peers on SaprotHub" or model_type_value == "Multi-models on SaprotHub":
+      if model_type_value == "Shared by peers on SeprotHub" or model_type_value == "Multi-models on SeprotHub":
         saprothub_data_type_hint.layout.display = None
       else:
         saprothub_data_type_hint.layout.display = "none"
 
-      if model_type_value == "Trained by yourself on ColabSaprot":
+      if model_type_value == "Trained by yourself on ColabSeprot":
         new_model_arg_box = select_adapter_from(None, use_model_from=model_type_value)
         new_model_arg_box.layout.width = WIDTH
         new_model_arg_box.description = "Select your local model:"
         new_model_arg_box.style = {'description_width': 'initial'}
         saprothub_link.layout.display = "none"
 
-      elif model_type_value == "Shared by peers on SaprotHub":
+      elif model_type_value == "Shared by peers on SeprotHub":
         new_model_arg_box = select_adapter_from(None, use_model_from=model_type_value)
         new_model_arg_box.layout.width = WIDTH
-        new_model_arg_box.placeholder = "Enter SaprotHub model id in HuggingFace"
+        new_model_arg_box.placeholder = "Enter SeprotHub model id in HuggingFace"
         new_model_arg_box.description = "Model id:"
         saprothub_link.layout.display = None
 
@@ -3125,10 +3393,10 @@ def protein_property_prediction():
         new_model_arg_box = upload_model_items
         saprothub_link.layout.display = "none"
 
-      elif model_type_value == "Multi-models on SaprotHub":
+      elif model_type_value == "Multi-models on SeprotHub":
         new_model_arg_box = ipywidgets.Textarea(
                         value=None,
-                        placeholder='Enter SaprotHub model ids, one line for one model.\ne.g.:\nSaprotHub/model_1\nSaprotHub/model_2\n\nNote: These models should have the same model size, i.e. both are 650M or 35M.',
+                        placeholder='Enter SeprotHub model ids, one line for one model.\ne.g.:\nSeprotHub/model_1\nSeprotHub/model_2\n\nNote: These models must share the same type and size. Advanced ensembling methods forthcoming.',
                         description='SaprotHub model ids:',
                         disabled=False,
                         style={'description_width': 'initial'},
@@ -3150,7 +3418,8 @@ def protein_property_prediction():
         custom_display(*items)
 
   def set_input_format():
-    data_type = data_type_box.value
+    # data_type = data_type_box.value
+    data_type = "protein sequence"
     upload_type = upload_type_box.value
     task_type = task_type_box.value
     if "Protein-protein" not in task_type:
@@ -3281,6 +3550,7 @@ def protein_property_prediction():
   def start_prediction(button):
     print("Start prediction....")
 
+
     task_type = task_type_box.value
     model_type = model_type_box.value
     model_arg = items[model_arg_box_idx].value
@@ -3296,7 +3566,7 @@ def protein_property_prediction():
       os.remove(zip_path)
       model_arg = save_dir
 
-    if model_type == "Multi-models on SaprotHub":
+    if model_type == "Multi-models on SeprotHub":
       model_arg_list = model_arg.strip().split("\n")
       for arg in model_arg_list:
         model_task_type = load_task_type_from_model(model_type, arg.strip())
@@ -3311,23 +3581,23 @@ def protein_property_prediction():
     # Check data type compatibility
     input_data_type = "AA" if data_type_box.value == "protein sequence" else "SA"
 
-    if model_type == "Multi-models on SaprotHub":
+    if model_type == "Multi-models on SeprotHub":
       model_arg_list = model_arg.strip().split("\n")
       for arg in model_arg_list:
         model_data_type = load_data_type_from_model(model_type, arg.strip())
-        if model_data_type != input_data_type:
-          if model_data_type == "SA":
-            raise Exception(f"Error: The model {arg.strip()} was trained on protein structures. So you have to upload protein structures!")
-          else:
-            raise Exception(f"Error: The model {arg.strip()} was trained on protein sequences. So you have to upload protein sequences!")
+        # if model_data_type != input_data_type:
+        #   if model_data_type == "SA":
+        #     raise Exception(f"Error: The model {arg.strip()} was trained on protein structures. So you have to upload protein structures!")
+        #   else:
+        #     raise Exception(f"Error: The model {arg.strip()} was trained on protein sequences. So you have to upload protein sequences!")
 
     else:
       model_data_type = load_data_type_from_model(model_type, model_arg)
-      if model_data_type != input_data_type:
-        if model_data_type == "SA":
-          raise Exception("Error: The model you choose was trained on protein structures. So you have to upload protein structures!")
-        else:
-          raise Exception("Error: The model you choose was trained on protein sequences. So you have to upload protein sequences!")
+      # if model_data_type != input_data_type:
+      #   if model_data_type == "SA":
+      #     raise Exception("Error: The model you choose was trained on protein structures. So you have to upload protein structures!")
+      #   else:
+      #     raise Exception("Error: The model you choose was trained on protein sequences. So you have to upload protein sequences!")
 
     # Process input
     data_type = data_type_box.value
@@ -3338,7 +3608,7 @@ def protein_property_prediction():
       aa_seq = input_seq_box_1.value
       df = df._append({"protein": aa_seq}, ignore_index=True)
 
-      sa_seq = "".join(aa + "#" for aa in aa_seq)
+      sa_seq = "".join(aa + "" for aa in aa_seq)
       rows.append(sa_seq)
 
     elif "Protein-protein" not in task_type and data_type == "protein sequence" and upload_type == "Multiple files":
@@ -3348,7 +3618,7 @@ def protein_property_prediction():
       df = pd.read_csv(csv_path)
       rows = []
       for aa_seq in df["protein"].values:
-        sa_seq = "".join(aa + "#" for aa in aa_seq)
+        sa_seq = "".join(aa + "" for aa in aa_seq)
         rows.append(sa_seq)
 
     elif "Protein-protein" not in task_type and data_type == "protein structure" and upload_type == "Single file":
@@ -3399,8 +3669,8 @@ def protein_property_prediction():
       aa_seq_2 = input_seq_box_2.value
       df = df._append({"protein_1": aa_seq_1, "protein_2": aa_seq_2}, ignore_index=True)
 
-      sa_seq_1 = "".join(aa + "#" for aa in aa_seq_1)
-      sa_seq_2 = "".join(aa + "#" for aa in aa_seq_2)
+      sa_seq_1 = "".join(aa + "" for aa in aa_seq_1)
+      sa_seq_2 = "".join(aa + "" for aa in aa_seq_2)
       rows.append([sa_seq_1, sa_seq_2])
 
     elif "Protein-protein" in task_type and data_type == "protein sequence" and upload_type == "Multiple files":
@@ -3410,8 +3680,8 @@ def protein_property_prediction():
       df = pd.read_csv(csv_path)
       rows = []
       for aa_seq_1, aa_seq_2 in df[["protein_1", "protein_2"]].values:
-        sa_seq_1 = "".join(aa + "#" for aa in aa_seq_1)
-        sa_seq_2 = "".join(aa + "#" for aa in aa_seq_2)
+        sa_seq_1 = "".join(aa + "" for aa in aa_seq_1)
+        sa_seq_2 = "".join(aa + "" for aa in aa_seq_2)
         rows.append([sa_seq_1, sa_seq_2])
 
     elif "Protein-protein" in task_type and data_type == "protein structure" and upload_type == "Single file":
@@ -3553,14 +3823,29 @@ def single_mut_pred():
   global refresh_module
   refresh_module = single_mut_pred
 
-  hint = HTML(markdown.markdown("# Single-site or Multi-site mutagenesis\n\n## Please upload the protein structure\n If you only have protein sequence, you could use <a href='https://alphafoldserver.com' target='blank'>AlphaFold server</a> to predict its structure and upload it here."))
+  hint = HTML(markdown.markdown("# Single-site or Multi-site mutagenesis"))
+  
+  # 添加模型选择
+  model_hint = HTML(markdown.markdown("## Please choose the model for mutation prediction:"))
+  model_type_box = ipywidgets.Dropdown(
+            options=['ESM2', 'ProTrek', 'SaProt-SeqOnly'],
+            value='ESM2',
+            description='Model type:',
+            disabled=False,
+            layout=Layout(width='500px', height='30px')
+          )
+  
+  # 序列输入相关组件
+  seq_hint = HTML(markdown.markdown("### Input the protein sequence"))
+  input_seq = ipywidgets.Textarea(
+      value="",
+      placeholder="Enter protein amino acid sequence here, e.g. MKTVRQERLKSIVRILERSKEPVSGAQLAEELSVSRQVIVQDIAYLRSLGYNIVATPRGYVLAGG",
+      description="Protein sequence:",
+      disabled=False,
+      style={'description_width': 'initial'},
+      layout=Layout(width='800px', height='100px')
+      )
 
-  chain_hint = HTML(markdown.markdown("Chain (to be extracted from the structure):"))
-  input_chain = ipywidgets.Text(value="A",placeholder=f'Enter the name of chain here', layout=Layout(width='500px', height='30px'))
-  upload_hint = HTML(markdown.markdown("Upload the protein structure:"))
-  # upload_btn = ipywidgets.FileUpload(accept='',multiple=False, description="Upload protein structure (.pdb / .cif file)", layout=Layout(width='500px', height='30px'))
-  # upload_btn = ipywidgets.Button(description="Upload protein structure (.pdb / .cif file)", layout=Layout(width='500px', height='30px'))
-  upload_items = get_upload_box()
   upload_ok_btn = ipywidgets.Button(
       description="Submit",
       layout=Layout(width='500px', height='30px'),
@@ -3569,155 +3854,53 @@ def single_mut_pred():
 
   items = [
       hint,
-      chain_hint,
-      input_chain,
-      upload_hint,
-      *upload_items,
+      model_hint,
+      model_type_box,
+      seq_hint,
+      input_seq,
       upload_ok_btn,
   ]
 
   # Set click events
-  def on_upload_file(button):
-    save_path = get_upload_file_path(upload_items)
-    name = os.path.basename(save_path)
-    assert name.endswith(".pdb") or name.endswith(".cif"), "Please upload file with correct format (.pdb / .cif)!"
+  def on_upload_file(change):
+    model_type_map = {
+      'ESM2': 'esm2',
+      'ProTrek': 'protrek',
+      'SaProt-SeqOnly': 'saprot-seq-only'
+    }
+    selected_model = model_type_map[model_type_box.value]
 
-    chain = input_chain.value
-    protein_list = [(save_path, chain)]
-    mprs = MultipleProcessRunnerSimplifier(protein_list, pdb2sequence, n_process=2, return_results=True, verbose=False)
-    seqs = mprs.run()
+      # 序列输入
+    aa_seq = input_seq.value.strip()
+    assert len(aa_seq) > 0, "Please enter a valid protein sequence!"
+    
+    seq_info = HTML(markdown.markdown(f"**Input sequence**\n\n**Amino acid sequence:**\n\n{aa_seq}"))
+    working_seq = aa_seq
 
-    assert len(seqs) != 0, f"The specified chain '{chain}' does not exist in the structure!"
+    submit_btn = Button(description='Calculate mutation score for all single-site mutations', layout=Layout(width='500px', height='30px'), button_style="info")
 
-    sa_seq = seqs[0].split("\t")[-1]
-    aa_seq = sa_seq[0::2]
-    struc_seq = sa_seq[1::2].replace("#", "\#")
-
-    seq_info = HTML(markdown.markdown(f"**{name}**\n\n**Foldseek sequence (\"#\" means low pLDDT positions that are masked):**\n\n{struc_seq}\n\n**Amino acid sequence:**\n\n{aa_seq}"))
-
-    # Mutation information box
-    input_hint = HTML(markdown.markdown(
-        "**Please input the mutation information:**"
-        )
-    )
-    pred_num_box = ipywidgets.RadioButtons(
-      options=['Single variant', 'multiple variants'],
-      disabled=False,
-      layout={'width': 'max-content'}, # If the items' names are long
-      description="How many variants do you want to predict?",
-      style={'description_width': 'initial'},
-      )
-
-    mut_hint =  HTML(markdown.markdown(
-        "For single-site mutation, e.g. M1E means mutating the amino acid M to E at first position. "
-        "For multi-site mutation, you are expected to separate each position by ':', e.g. M1E:P2V"
-        )
-    )
-
-    upload_csv_hint = HTML(markdown.markdown(
-              "<img src='https://github.com/westlake-repl/SaProtHub/blob/dev/Figure/prediction/dataset/mut.jpg?raw=true' height='200px' width='400px' align='center'>\n\n"
-              "Please upload a ``.csv`` file that contains all mutations to predict. Please strictly follow the format above **(column names are also needed in the csv file)**. "
-              "Then click the start button."
-              ), layout=Layout(display="none"))
-
-    upload_csv_items = get_upload_box()
-    for item in upload_csv_items[:4]:
-      item.layout.display = "none"
-
-    input_mut = ipywidgets.Text(
-        placeholder="Enter mutation information here, e.g. M1E", layout=Layout(width='1000px', height='30px'))
-    submit_btn = Button(description='Calculate mutation score', layout=Layout(width='500px', height='30px'), button_style="info")
-
-
-    new_items = items + [
-        seq_info,
-        input_hint,
-        pred_num_box,
-        mut_hint,
-        input_mut,
-        upload_csv_hint,
-        *upload_csv_items,
-        submit_btn
-        ]
-
-    def change_pred_num(change):
-      now_type = change["new"]
-      if now_type == "Single variant":
-        upload_csv_hint.layout.display = "none"
-        set_upload_visibility(upload_csv_items, "none")
-        input_mut.layout.display = None
-
-      else:
-        upload_csv_hint.layout.display = None
-        set_upload_visibility(upload_csv_items, "default")
-        input_mut.layout.display = "none"
+    new_items = items + [seq_info, submit_btn]
 
     # Click to calculate mutation score
     def calc_mut_score(button):
-      if pred_num_box.value == "Single variant":
-        mut_info = input_mut.value
-        # Skip empty input
-        if mut_info.strip() == "":
-          return
+      print(f"Predicting mutation scores for all single-site mutations...")
+      save_path = predict_all_mut(working_seq, selected_model)
+      score_hint = HTML(markdown.markdown(f"The result has been saved to {save_path}. You can click to download the file.\n\n"
+      "**Please check <a href='https://github.com/westlake-repl/SaprotHub/wiki/SaprotHub-v2-(latest)#introduction-of-saprot-mutation-score' target='blank'>here</a> for the description of the mutation score.**"))
+      download_btn = generate_download_btn(save_path)
 
-        for single in mut_info.split(":"):
-          # Assert position valid
-          pos = int(single[1:-1])
-          assert 0 < pos <= len(aa_seq), f"The mutation position should be greater than 0 and not greater than the length of sequence ({len(aa_seq)})"
+      new_items = items + [seq_info, submit_btn, score_hint, download_btn]
+      custom_display(*new_items)
 
-          # Assert amino acid valid
-          ori_aa = single[0]
-          assert ori_aa == aa_seq[pos-1], f"The amino acid at position {pos} is not {ori_aa}! Please refer to the amino acid sequence above to find correct position (the counting starts from 1)."
-
-        print(f"Predict the mutation score for {mut_info}...")
-        score = predict_mut(sa_seq, mut_info)
-        score_hint = HTML(markdown.markdown(
-            f"The score for {mut_info} is <font color=red>{score.item()}</font>. **Please check <a href='https://github.com/westlake-repl/SaprotHub/wiki/SaprotHub-v2-(latest)#introduction-of-saprot-mutation-score' target='blank'>here</a> for the description of the mutation score.**"))
-        new_items = items + [seq_info, input_hint, pred_num_box, input_mut, upload_csv_hint, mut_hint, *upload_csv_items, submit_btn, score_hint]
-        custom_display(*new_items)
-
-      else:
-        save_path = get_upload_file_path(upload_csv_items)
-        name = os.path.basename(save_path)
-        assert name.endswith(".csv"), "Please upload file with correct format (.csv)!"
-
-        df = pd.read_csv(save_path)
-        print(f"Predicting...")
-        zeroshot_model = load_zeroshot_model()
-        scores = []
-        for mut_info in tqdm(df["mutation"].values):
-          for single in mut_info.split(":"):
-            # Assert position valid
-            pos = int(single[1:-1])
-            assert 0 < pos <= len(aa_seq), f"For {mut_info}, The mutation position should be greater than 0 and not greater than the length of sequence ({len(aa_seq)})"
-
-            # Assert amino acid valid
-            ori_aa = single[0]
-            assert ori_aa == aa_seq[pos-1], f"For {mut_info}, The amino acid at position {pos} is not {ori_aa}! Please refer to the amino acid sequence above to find correct position (the counting starts from 1)."
-
-          score = zeroshot_model.predict_mut(sa_seq, mut_info)
-          scores.append(score.item())
-
-        df["score"] = scores
-        save_path = OUTPUT_HOME / "mutation_results.csv"
-        df.to_csv(save_path, index=False)
-        download_btn = generate_download_btn(save_path)
-
-        pred_hint = HTML(markdown.markdown(
-          f"Prediction results have been saved to ``{save_path}``. You can click to download the results."
-          )
-        )
-
-        new_items = items + [seq_info, input_hint, pred_num_box, input_mut, upload_csv_hint, mut_hint, *upload_csv_items, submit_btn, pred_hint, download_btn]
-        custom_display(*new_items)
-
-    pred_num_box.observe(change_pred_num, names="value")
     submit_btn.on_click(
         lambda btn: start_thread(calc_mut_score, (btn,))
-        )
+          )
     custom_display(*new_items)
 
+  # model_type_box.observe(change_model_type, names="value")
+  # input_type_box.observe(change_input_type, names="value")
   upload_ok_btn.on_click(on_upload_file)
+
   display(*items)
 
 
@@ -3728,12 +3911,47 @@ def saturation_mut_pred():
   global refresh_module
   refresh_module = saturation_mut_pred
 
-  hint = HTML(markdown.markdown("# Single-site saturation mutagenesis\n\n## Please upload the protein structure\n If you only have protein sequence, you could use <a href='https://alphafoldserver.com' target='blank'>AlphaFold server</a> to predict its structure and upload it here."))
+  hint = HTML(markdown.markdown("# Single-site saturation mutagenesis"))
+  
+  # 添加模型选择
+  model_hint = HTML(markdown.markdown("## Please choose the model for mutation prediction:"))
+  model_type_box = ipywidgets.Dropdown(
+            options=['SaProt (Structure-aware)', 'ESM2 (Sequence-only)', 'ProTrek (Sequence-only)', 'SaProt-SeqOnly (Sequence-only)'],
+            value='SaProt (Structure-aware)',
+            description='Model type:',
+            disabled=False,
+            layout=Layout(width='500px', height='30px')
+          )
+  
+  # 添加输入方式选择
+  input_hint = HTML(markdown.markdown("## Please choose the input type:"))
+  input_type_box = ipywidgets.RadioButtons(
+      options=['Protein structure (.pdb/.cif file)', 'Protein sequence (text input)'],
+      value='Protein structure (.pdb/.cif file)',
+      disabled=False,
+      layout={'width': 'max-content'},
+      description="Input type:",
+      style={'description_width': 'initial'},
+      )
 
+  # 结构输入相关组件
+  structure_hint = HTML(markdown.markdown("### Upload the protein structure\n If you only have protein sequence, you could use <a href='https://alphafoldserver.com' target='blank'>AlphaFold server</a> to predict its structure and upload it here."))
   chain_hint = HTML(markdown.markdown("Chain (to be extracted from the structure):"))
   input_chain = ipywidgets.Text(value="A",placeholder=f'Enter the name of chain here', layout=Layout(width='500px', height='30px'))
   upload_hint = HTML(markdown.markdown("Upload the protein structure:"))
   upload_items = get_upload_box()
+  
+  # 序列输入相关组件
+  seq_hint = HTML(markdown.markdown("### Input the protein sequence"), layout=Layout(display="none"))
+  input_seq = ipywidgets.Textarea(
+      value="",
+      placeholder="Enter protein amino acid sequence here, e.g. MKTVRQERLKSIVRILERSKEPVSGAQLAEELSVSRQVIVQDIAYLRSLGYNIVATPRGYVLAGG",
+      description="Protein sequence:",
+      disabled=False,
+      style={'description_width': 'initial'},
+      layout=Layout(width='800px', height='100px', display="none")
+      )
+
   upload_ok_btn = ipywidgets.Button(
       description="Submit",
       layout=Layout(width='500px', height='30px'),
@@ -3742,40 +3960,100 @@ def saturation_mut_pred():
 
   items = [
       hint,
+      model_hint,
+      model_type_box,
+      input_hint,
+      input_type_box,
+      structure_hint,
       chain_hint,
       input_chain,
       upload_hint,
       *upload_items,
+      seq_hint,
+      input_seq,
       upload_ok_btn,
   ]
 
+  # 根据输入类型切换显示
+  def change_input_type(change):
+    input_type = change["new"]
+    if input_type == "Protein structure (.pdb/.cif file)":
+      structure_hint.layout.display = None
+      chain_hint.layout.display = None
+      input_chain.layout.display = None
+      upload_hint.layout.display = None
+      set_upload_visibility(upload_items, "default")
+      seq_hint.layout.display = "none"
+      input_seq.layout.display = "none"
+    else:
+      structure_hint.layout.display = "none"
+      chain_hint.layout.display = "none"
+      input_chain.layout.display = "none"
+      upload_hint.layout.display = "none"
+      set_upload_visibility(upload_items, "none")
+      seq_hint.layout.display = None
+      input_seq.layout.display = None
+
+  # 根据模型类型调整输入选项
+  def change_model_type(change):
+    model_type = change["new"]
+    if model_type == 'SaProt (Structure-aware)':
+      # SaProt需要结构信息，限制输入选项
+      input_type_box.options = ['Protein structure (.pdb/.cif file)']
+      input_type_box.value = 'Protein structure (.pdb/.cif file)'
+    else:
+      # 序列模型可以接受两种输入
+      input_type_box.options = ['Protein structure (.pdb/.cif file)', 'Protein sequence (text input)']
+
   # Set click events
   def on_upload_file(change):
-    save_path = get_upload_file_path(upload_items)
-    name = os.path.basename(save_path)
-    assert name.endswith(".pdb") or name.endswith(".cif"), "Please upload file with correct format (.pdb / .cif)!"
+    model_type_map = {
+      'SaProt (Structure-aware)': 'saprot',
+      'ESM2 (Sequence-only)': 'esm2',
+      'ProTrek (Sequence-only)': 'protrek',
+      'SaProt-SeqOnly (Sequence-only)': 'saprot-seq-only'
+    }
+    selected_model = model_type_map[model_type_box.value]
+    
+    if input_type_box.value == "Protein structure (.pdb/.cif file)":
+      save_path = get_upload_file_path(upload_items)
+      name = os.path.basename(save_path)
+      assert name.endswith(".pdb") or name.endswith(".cif"), "Please upload file with correct format (.pdb / .cif)!"
 
-    chain = input_chain.value
-    protein_list = [(save_path, chain)]
-    mprs = MultipleProcessRunnerSimplifier(protein_list, pdb2sequence, n_process=2, return_results=True, verbose=False)
-    seqs = mprs.run()
+      chain = input_chain.value
+      protein_list = [(save_path, chain)]
+      mprs = MultipleProcessRunnerSimplifier(protein_list, pdb2sequence, n_process=2, return_results=True, verbose=False)
+      seqs = mprs.run()
 
-    assert len(seqs) != 0, f"The specified chain '{chain}' does not exist in the structure!"
+      assert len(seqs) != 0, f"The specified chain '{chain}' does not exist in the structure!"
 
-    sa_seq = seqs[0].split("\t")[-1]
-    aa_seq = sa_seq[0::2]
-    struc_seq = sa_seq[1::2].replace("#", "\#")
+      sa_seq = seqs[0].split("\t")[-1]
+      aa_seq = sa_seq[0::2]
+      struc_seq = sa_seq[1::2].replace("#", "\#")
 
-    seq_info = HTML(markdown.markdown(f"**{name}**\n\n**Foldseek sequence (\"#\" means low pLDDT positions that are masked):**\n\n{struc_seq}\n\n**Amino acid sequence:**\n\n{aa_seq}"))
+      if selected_model == 'saprot':
+        seq_info = HTML(markdown.markdown(f"**{name}**\n\n**Foldseek sequence (\"#\" means low pLDDT positions that are masked):**\n\n{struc_seq}\n\n**Amino acid sequence:**\n\n{aa_seq}"))
+        working_seq = sa_seq
+      else:
+        seq_info = HTML(markdown.markdown(f"**{name}**\n\n**Amino acid sequence:**\n\n{aa_seq}"))
+        working_seq = aa_seq
+    
+    else:
+      # 序列输入
+      aa_seq = input_seq.value.strip()
+      assert len(aa_seq) > 0, "Please enter a valid protein sequence!"
+      
+      seq_info = HTML(markdown.markdown(f"**Input sequence**\n\n**Amino acid sequence:**\n\n{aa_seq}"))
+      working_seq = aa_seq
+
     submit_btn = Button(description='Calculate mutation score for all single-site mutations', layout=Layout(width='500px', height='30px'), button_style="info")
-
 
     new_items = items + [seq_info, submit_btn]
 
     # Click to calculate mutation score
     def calc_mut_score(button):
       print(f"Predicting mutation scores for all single-site mutations...")
-      save_path = predict_all_mut(sa_seq)
+      save_path = predict_all_mut(working_seq, selected_model)
       score_hint = HTML(markdown.markdown(f"The result has been saved to {save_path}. You can click to download the file.\n\n"
       "**Please check <a href='https://github.com/westlake-repl/SaprotHub/wiki/SaprotHub-v2-(latest)#introduction-of-saprot-mutation-score' target='blank'>here</a> for the description of the mutation score.**"))
       download_btn = generate_download_btn(save_path)
@@ -3784,13 +4062,12 @@ def saturation_mut_pred():
       custom_display(*new_items)
 
     submit_btn.on_click(
-        # disable_wrapper(
-        #     lambda btn: start_thread(calc_mut_score, (btn,))
-        #     )
         lambda btn: start_thread(calc_mut_score, (btn,))
           )
     custom_display(*new_items)
 
+  model_type_box.observe(change_model_type, names="value")
+  input_type_box.observe(change_input_type, names="value")
   upload_ok_btn.on_click(on_upload_file)
 
   display(*items)
@@ -4002,8 +4279,8 @@ def obtain_protein_embedding():
 
   data_type_hint = HTML(markdown.markdown("### Uploaded data type:"))
   data_type_box = ipywidgets.RadioButtons(
-      options=['protein sequence', 'protein structure'],
-      value="protein structure",
+      options=['protein sequence'],
+      value="protein sequence",
       disabled=False,
       style={'description_width': 'initial'},
       )
@@ -4013,8 +4290,8 @@ def obtain_protein_embedding():
 
   model_hint = HTML(markdown.markdown("### Choose the model for embedding generation:"))
   model_type_box = ipywidgets.Dropdown(
-            options=['Official SaProt (35M)', "Official SaProt (650M)", "Trained by yourself on ColabSaprot", "Shared by peers on SaprotHub", "Saved in your local computer"],
-            value='Official SaProt (35M)',
+            options=["Official ProTrek (35M)", "Official ProTrek (650M)", "Official ESM2 (35M)", "Official ESM2 (150M)", "Official ESM2 (650M)", "Official ESM1b (650M)", "Official ProtBert (420M)", "Official SaProt_AF2 (35M)", "Official SaProt_SeqOnly (1.3B)", "Trained by yourself on ColabSeprot", "Shared by peers on SeprotHub", "Saved in your local computer"],
+            value='Official ProTrek (35M)',
             description='Base model:',
             disabled=False,
             layout=Layout(width=WIDTH, height=HEIGHT)
@@ -4026,19 +4303,19 @@ def obtain_protein_embedding():
   set_upload_visibility(upload_model_items, mode="none")
 
   saprothub_link = HTML(markdown.markdown(
-    "<font color=red>You could search models using our <a href='https://huggingface.co/spaces/SaProtHub/SaprotHub-search' target='blank'>search engine</a> or from <a href='https://huggingface.co/SaProtHub' target='blank'>SaprotHub</a>\n\n"
-    "A model id example: <a href='https://huggingface.co/SaProtHub/Model-Binary_Localization-650M' target='blank'>SaProtHub/Model-Binary_Localization-650M</a></font>"
+    "<font color=red>You could search models from <a href='https://huggingface.co/SeprotHub' target='blank'>SeprotHub</a>\n\n"
+    "A model id example: <a href='https://huggingface.co/SeprotHub/Model-Classification-ProTrek-35M' target='blank'>SeprotHub/Model-Classification-ProTrek-35M</a></font>"
     ), layout=Layout(display="none"))
 
   upload_type_hint = HTML(markdown.markdown("### Choose the number of protein structure:"))
   upload_type_box = ipywidgets.RadioButtons(
         options=['Single file', 'Multiple files'],
-        layout={'width': 'max-content'}, # If the items' names are long
+        layout=Layout(width=WIDTH, height=HEIGHT, display="none"),
         disabled=False,
         style={'description_width': 'initial'},
         )
 
-  upload_hint = HTML(markdown.markdown("**Upload the protein structure (.pdb / .cif file):**"))
+  upload_hint = HTML(markdown.markdown("**Upload the protein sequences (.fasta file):**"))
   upload_items = get_upload_box()
   upload_ok_btn = ipywidgets.Button(
       description="Submit",
@@ -4057,10 +4334,10 @@ def obtain_protein_embedding():
       model_type_box,
       model_arg_box,
       saprothub_link,
-      data_type_hint,
-      data_type_box,
-      saprothub_data_type_hint,
-      upload_type_hint,
+      # data_type_hint,
+    #   data_type_box,
+      # saprothub_data_type_hint,
+      # upload_type_hint,
       upload_type_box,
       upload_hint,
       *upload_items,
@@ -4076,22 +4353,22 @@ def obtain_protein_embedding():
   # Set click events
   def change_model_type(change):
     model_type_value = change["new"]
-    if model_type_value == "Shared by peers on SaprotHub":
+    if model_type_value == "Shared by peers on SeprotHub":
       saprothub_data_type_hint.layout.display = None
     else:
       saprothub_data_type_hint.layout.display = "none"
 
-    if model_type_value == "Trained by yourself on ColabSaprot":
+    if model_type_value == "Trained by yourself on ColabSeprot":
       new_model_arg_box = select_adapter_from(None, use_model_from=model_type_value)
       new_model_arg_box.layout.width = WIDTH
       new_model_arg_box.description = "Select your local model:"
       new_model_arg_box.style = {'description_width': 'initial'}
       saprothub_link.layout.display = "none"
 
-    elif model_type_value == "Shared by peers on SaprotHub":
+    elif model_type_value == "Shared by peers on SeprotHub":
       new_model_arg_box = select_adapter_from(None, use_model_from=model_type_value)
       new_model_arg_box.layout.width = WIDTH
-      new_model_arg_box.placeholder = "Enter SaprotHub model id in HuggingFace"
+      new_model_arg_box.placeholder = "Enter SeprotHub model id in HuggingFace"
       new_model_arg_box.description = "Model id:"
       saprothub_link.layout.display = None
 
@@ -4230,11 +4507,11 @@ def obtain_protein_embedding():
       model_arg = items[model_arg_box_idx].value
 
     model_data_type = load_data_type_from_model(model_type_box.value, model_arg)
-    if model_data_type != upload_data_type:
-      if model_data_type == "SA":
-        raise Exception("Error: The model you choose was trained on protein structures. So you have to upload protein structures!")
-      else:
-        raise Exception("Error: The model you choose was trained on protein sequences. So you have to upload protein sequences!")
+    # if model_data_type != upload_data_type:
+    #   if model_data_type == "SA":
+    #     raise Exception("Error: The model you choose was trained on protein structures. So you have to upload protein structures!")
+    #   else:
+    #     raise Exception("Error: The model you choose was trained on protein sequences. So you have to upload protein sequences!")
 
     print("Start generation...")
     zip_path = generate_embeddings(pdb_list, model_type_box.value, model_arg)
@@ -4272,11 +4549,11 @@ def share_model():
 
   sep_hint = HTML(markdown.markdown(f"### {'-'*75}\n\n## Please first login to HuggingFace (see above)"))
 
-  upload_hint = HTML(markdown.markdown(f"### Choose the model yout want to share"))
+  upload_hint_1 = HTML(markdown.markdown(f"### Choose the model yout want to share"))
 
   share_model_type_box = ipywidgets.Dropdown(
-              options=["Trained by yourself on ColabSaprot", "Saved in your local computer"],
-              value='Trained by yourself on ColabSaprot',
+              options=["Trained by yourself on ColabSeprot", "Saved in your local computer"],
+              value='Trained by yourself on ColabSeprot',
               description='Base model:',
               disabled=False,
               layout=Layout(width=WIDTH, height=HEIGHT)
@@ -4292,7 +4569,7 @@ def share_model():
 
   desc_hint = HTML(markdown.markdown(
       f"### Describe your model\n\n"
-      "<font color=red>A more accurate model description enables easier retrieval by other researchers on SaprotHub.</font>"
+      "<font color=red>A more accurate model description enables easier retrieval by other researchers on SeprotHub.</font>"
       ))
 
   task_id_box = ipywidgets.Text(
@@ -4355,7 +4632,7 @@ def share_model():
                 )
 
   upload_hint = HTML(markdown.markdown(
-    "<font color=red>Note: Model input type and task type will be detected automatically.</font>"
+    "<font color=red>Note: Task type will be detected automatically.</font>"
     ))
 
   upload_to_hf_btn = Button(description='Upload to HuggingFace', layout=Layout(width=WIDTH, height=HEIGHT), button_style="info")
@@ -4363,7 +4640,7 @@ def share_model():
 
   items = [
       sep_hint,
-      upload_hint,
+      upload_hint_1,
       share_model_type_box,
       model_arg_box,
       desc_hint,
@@ -4385,7 +4662,7 @@ def share_model():
   def change_model_type(change):
     model_type_value = change["new"]
 
-    if model_type_value == "Trained by yourself on ColabSaprot":
+    if model_type_value == "Trained by yourself on ColabSeprot":
       new_model_arg_box = select_adapter_from(None, use_model_from=model_type_value)
       new_model_arg_box.layout.width = WIDTH
       new_model_arg_box.description = "Select your local model:"
@@ -4456,7 +4733,6 @@ def share_model():
     ######################################################################
     #             Modify README              #
     ######################################################################
-    import json
 
     md_path = local_dir / "README.md"
 
@@ -4511,7 +4787,7 @@ def share_model():
     url = f"https://huggingface.co/{user['name']}/{name}"
     finish_hint = HTML(markdown.markdown(
         f"**You model has been successfully uploaded to <a href='{url}' target='blank'>{url}</a>!**\n\n"
-        "**You can further move your model from personal repository to official SaprotHub, see <a href='https://github.com/westlake-repl/SaprotHub/wiki/SaprotHub-v2-(latest)#share-your-model-to-official-saprothub' target='blank'>here</a>!**\n\n"
+        "**You can further move your model from personal repository to official SeprotHub, see <a href='https://github.com/westlake-repl/SaprotHub/wiki/SaprotHub-v2-(latest)#share-your-model-to-official-saprothub' target='blank'>here</a>!**\n\n"
         ))
     display(finish_hint)
 

@@ -38,11 +38,19 @@ class SaprotClassificationDataset(LMDBDataset):
         self.mask_seed = mask_seed
         self.plddt_threshold = plddt_threshold
 
+        self.is_saprot_model = 'saprot' in tokenizer.lower() if isinstance(tokenizer, str) else False
+
     def __getitem__(self, index):
         entry = json.loads(self._get(index))
         seq = entry['seq'][:self.max_length-2]
-        if not isinstance(self.tokenizer, EsmTokenizer):
-            seq = " ".join(seq)
+        
+        if self.is_saprot_model:
+            processed_seq = []
+            for aa in seq:
+                processed_seq.append(aa + "#")
+            seq = processed_seq
+
+        seq = " ".join(seq)
         
         # Mask structure tokens
         if self.mask_struc_ratio is not None:
@@ -97,9 +105,10 @@ class SaprotClassificationDataset(LMDBDataset):
     
         encoder_info = self.tokenizer.batch_encode_plus(seqs, return_tensors='pt', padding=True)
 
-        
         inputs = {"inputs": encoder_info}
+
         if self.use_bias_feature:
             inputs["coords"] = coords
+
 
         return inputs, labels
